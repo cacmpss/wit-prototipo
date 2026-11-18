@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototipo",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd /private/tmp/claude-501/-Users-camillecampos--claude-spares-spare-qo7TJ6/b6333ef4-4262-45ed-91b3-562990300da4/scratchpad/site && exec python3 -c \"import http.server as h\nclass H(h.SimpleHTTPRequestHandler):\n  def end_headers(self):\n    self.send_header('Cache-Control','no-store'); super().end_headers()\nh.ThreadingHTTPServer(('127.0.0.1',5174),H).serve_forever()\""],
+      "port": 5174,
+      "autoPort": false
+    },
+    {
+      "name": "apresentacao",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd /private/tmp/claude-501/-Users-camillecampos--claude-spares-spare-HuddKb/d43ae234-7255-4232-bff3-b63d408ba929/scratchpad/build && exec python3 -c \"import http.server as h\nclass H(h.SimpleHTTPRequestHandler):\n  def end_headers(self):\n    self.send_header('Cache-Control','no-store'); super().end_headers()\nh.ThreadingHTTPServer(('127.0.0.1',5175),H).serve_forever()\""],
+      "port": 5175,
+      "autoPort": false
+    }
+  ]
+}

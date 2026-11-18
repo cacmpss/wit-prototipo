@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Components in motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Inter:wght@400;500&display=swap">
+<!-- The prototype's own stylesheet: every component below uses its classes and tokens unchanged. -->
+<link rel="stylesheet" href="prototipo/styles.css">
+<style>
+  /* Page frame only: undo the prototype's device-stage body layout */
+  html, body { height: auto; }
+  body { display: block; overflow: hidden; background: transparent; gap: 0; margin: 0; }
+  /* Full-bleed band; the layout is a set of named areas per width, so the grid never leaves holes */
+  .bento {
+    display: grid; gap: 12px; padding: 16px clamp(12px, 3vw, 32px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas: "ai plan ctrl sched" "steps chat ctrl sched" "pots day stats stats" "icons icons icons icons";
+    border-top: 1px solid rgba(22,51,0,.12); border-bottom: 1px solid rgba(22,51,0,.12);
+    background: radial-gradient(120% 90% at 100% 100%, rgba(242,236,120,.35), transparent 55%), radial-gradient(80% 70% at 85% 80%, rgba(159,232,112,.28), transparent 60%), #f6f8f3;
+  }
+  .bento > * { min-width: 0; }
+  .a-ai { grid-area: ai; } .a-plan { grid-area: plan; } .a-ctrl { grid-area: ctrl; } .a-sched { grid-area: sched; } .a-steps { grid-area: steps; }
+  .a-chat { grid-area: chat; } .a-pots { grid-area: pots; } .a-day { grid-area: day; } .a-stats { grid-area: stats; } .a-icons { grid-area: icons; }
+  /* Columns never get narrower than ~360px: the components were designed for a 402px phone. */
+  @media (max-width: 1559px) {
+    .bento { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "ai plan ctrl" "steps chat ctrl" "sched pots day" "stats stats icons"; }
+  }
+  @media (max-width: 1159px) {
+    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "ai plan" "ctrl sched" "steps chat" "pots day" "stats stats" "icons icons"; }
+  }
+  @media (max-width: 759px) {
+    .bento { grid-template-columns: minmax(0, 1fr); grid-template-areas: "ai" "plan" "ctrl" "sched" "steps" "chat" "pots" "day" "stats" "icons"; padding: 12px; }
+  }
+
+  /* Tiles that are bare components (not cards) sit on a white surface like the chat does */
+  .surface { background: var(--surface); border: 1px solid var(--border-default); border-radius: var(--r-container); padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* AI state: the FAB is the prototype's (absolute in the phone) — here it sits in the flow */
+  .fab-row { display: flex; gap: 16px; align-items: flex-start; }
+  .fab-row .fab { position: relative; left: auto; top: auto; right: auto; bottom: auto; flex: none; }
+  .fab-row .fab::after { content: ""; position: absolute; inset: 0; border-radius: 24px; border: 2px solid var(--accent); animation: fabRing 2.4s var(--e-enter) infinite; }
+  .fab-row .fab + .fab::after { animation-delay: 1.2s; }
+  @keyframes fabRing { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
+  .fab .notif { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--error); color: #fff; font: 600 11px/18px var(--font); text-align: center; animation: notifPop 3s var(--e-enter) infinite; }
+  @keyframes notifPop { 0%, 12% { transform: scale(0); } 22% { transform: scale(1.2); } 30%, 100% { transform: scale(1); } }
+  .prep { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-top: 2px; }
+  .prep .ident { display: flex; gap: 8px; align-items: center; font: 400 14px/20px var(--font); }
+  .skel { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #ededed 0%, #f8f8f8 40%, #ededed 80%) 0 0 / 200% 100%; animation: skel 1.4s linear infinite; }
+  @keyframes skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+  .ai-glow { height: 104px; border-radius: var(--r-container); display: grid; place-items: center; background: linear-gradient(100deg, #163300 0%, #65cf21 32%, #9fe870 52%, #c0f2a0 72%, #f4ea7a 100%) 0 0 / 200% 100%; animation: glowFlow 6s ease-in-out infinite alternate; }
+  .ai-glow img { width: 44px; height: 44px; animation: twinkle 2.4s ease-in-out infinite; }
+  @keyframes glowFlow { to { background-position: 100% 0; } }
+  @keyframes twinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.1) rotate(6deg); } }
+  /* Like toggled: inverse green, as in the Figma library */
+  .response-actions .icon-btn.on { background: var(--inverted); color: #fff; }
+
+  /* Plan summary draw-in */
+  #pLine { stroke-dasharray: 1; }
+  .draw #pLine { animation: drawLine 1.2s var(--e-standard) both; }
+  .draw #pArea { animation: fadeIn 1.2s var(--e-standard) both; }
+  .draw #pDot { animation: dotPop .45s 1s var(--e-enter) both; transform-box: fill-box; transform-origin: center; }
+  @keyframes drawLine { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes fadeIn { from { opacity: 0; } }
+  @keyframes dotPop { from { transform: scale(0); } 60% { transform: scale(1.3); } to { transform: scale(1); } }
+  .chart { position: relative; }
+  .chart svg { display: block; overflow: visible; max-width: 100%; }
+  .slider .thumb, .slider .fill { transition: left var(--d-base) var(--e-spring), width var(--d-base) var(--e-spring); }
+  .stacked span { transition: flex-grow var(--d-base) var(--e-standard); }
+
+  /* Scheduled card */
+  .progress span { transition: width 700ms var(--e-standard); }
+  .tl-item { transition: opacity 300ms var(--e-standard), transform 300ms var(--e-enter); }
+  .tl-item.hide { opacity: 0; transform: translateY(6px); }
+
+  /* Chat */
+  .chat-tile { justify-content: flex-end; }
+  .user { transition: opacity 300ms var(--e-standard), transform 300ms var(--e-enter); }
+  .user.hide { opacity: 0; transform: translateY(16px); }
+  .typed-caret { display: inline-block; width: 1.5px; height: 1.05em; margin-left: 1px; vertical-align: -3px; background: var(--inverted); animation: caretBlink 1s steps(1) infinite; }
+  @keyframes caretBlink { 50% { opacity: 0; } }
+  .round-dark.press { transform: scale(.82); }
+
+  /* Pots */
+  .pot-row { transition: opacity 300ms var(--e-standard), transform 300ms var(--e-enter); width: 100%; }
+  .pot-row.hide { opacity: 0; transform: translateX(-8px); }
+  /* Header lines up with the content of the pot rows (row padding 12px + 1px border) */
+  .pots-tile .tabs, .pots-tile .balance-row, .pots-tile .earn { padding-left: 13px; padding-right: 13px; }
+  .pots-tile .tabs { padding-left: 1px; }
+
+  /* Stats */
+  .stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat-row .card { gap: 2px; }
+  .stat-row .t-h1 { font-variant-numeric: tabular-nums; }
+  .pot-actions button { transition: background-color 200ms var(--e-standard), transform 200ms var(--e-enter); }
+  .pot-actions button.press { background: var(--accent-muted); transform: scale(.97); }
+  @media (max-width: 520px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* 3D icons */
+  .icons3d { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 8px; }
+  .icons3d span { max-height: 120px; }
+  .icons3d span { aspect-ratio: 1; border-radius: var(--r-container); background: var(--surface); border: 1px solid var(--border-default); display: grid; place-items: center; }
+  .icons3d img { width: 62%; height: 62%; object-fit: contain; animation: bob 3.2s ease-in-out infinite; }
+  .icons3d span:nth-child(2) img { animation-delay: -.5s; } .icons3d span:nth-child(3) img { animation-delay: -1s; }
+  .icons3d span:nth-child(4) img { animation-delay: -1.5s; } .icons3d span:nth-child(5) img { animation-delay: -2s; } .icons3d span:nth-child(6) img { animation-delay: -2.5s; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="bento" id="bento">
+
+  <!-- 1 · AI state: FAB, loading, feedback -->
+  <div class="surface a-ai">
+    <div class="fab-row">
+      <span class="fab" aria-hidden="true"><img src="prototipo/assets/img/ai-logo.png" alt=""></span>
+      <span class="fab" aria-hidden="true"><img src="prototipo/assets/img/ai-logo.png" alt=""><span class="notif">1</span></span>
+      <div class="prep"><div class="ident"><span class="dot info pulse"></span><span class="shimmer">Preparing the response…</span></div><span class="skel"></span><span class="skel" style="width:70%"></span></div>
+    </div>
+    <div class="ai-glow"><img src="prototipo/assets/img/ai-logo.png" alt=""></div>
+    <p class="t-body" id="aiStatus">Looking for the best way to help you…</p>
+    <div class="response-actions" id="react"></div>
+  </div>
+
+  <!-- 2 · Plan summary (prototype markup) -->
+  <div class="card a-plan" id="planSummary">
+    <div class="row-between"><span class="t-label">Your plan</span><span class="t-sup">Nov to Aug 2027</span></div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span class="t-sup">By August you’ll have</span>
+      <div class="row-between"><span class="t-h1" id="pTotal">€2,750</span><span class="badge neutral" id="pBadge">€250 to go</span></div>
+    </div>
+    <div class="chart" id="pChart"></div>
+    <div class="months" id="pMonths"></div>
+    <div class="chart-legend"><span><i></i>Your plan</span><span><i class="dash"></i>Path to goal</span></div>
+  </div>
+
+  <!-- 3 · Plan controls (prototype markup) -->
+  <div class="card a-ctrl" id="planControls">
+    <span class="t-label">Shortcuts</span>
+    <div class="shortcuts" id="shortcuts"></div>
+    <div class="row-between">
+      <span class="t-label">Monthly deposit</span>
+      <div class="stepper"><span class="icon-btn secondary" data-i="minus"></span><span class="val" id="pDeposit">€350</span><span class="icon-btn secondary" data-i="plus"></span></div>
+    </div>
+    <div class="slider" id="pSlider">
+      <div class="track"></div><div class="fill"></div>
+      <div class="mark" style="left:calc(8px + (100% - 16px) * 0.7865)"></div>
+      <div class="mark" style="left:calc(8px + (100% - 16px) * 0.8674)"></div>
+      <div class="thumb outline"></div>
+    </div>
+    <div class="divider"></div>
+    <span class="t-label">From a surplus of about €445 a month</span>
+    <div class="stacked" id="pStack"><span style="background:var(--inverted)"></span><span style="background:var(--border-emphasized)"></span></div>
+    <div class="legend">
+      <div class="legend-row"><span class="sw" style="background:var(--inverted)"></span>Deposit<span class="v" id="pLegDeposit">€350</span></div>
+      <div class="legend-row"><span class="sw" style="background:var(--border-emphasized)"></span>Free<span class="v" id="pLegFree">€95</span></div>
+    </div>
+    <div class="banner success" id="pBanner"></div>
+  </div>
+
+  <!-- 4 · Plan scheduled (prototype markup) -->
+  <div class="card a-sched" id="scheduledCard">
+    <div class="row-between"><span class="t-strong">Summer holiday</span><span class="badge success">Scheduled</span></div>
+    <div class="row-between"><span class="t-body muted">By August</span><span class="t-strong">€2,750 of €3,000</span></div>
+    <div class="progress" id="schedBar">
+      <span style="width:10%;background:var(--inverted)"></span>
+      <span style="width:81.67%;background:var(--accent)"></span>
+      <span style="flex:1;background:var(--body-bg)"></span>
+    </div>
+    <div class="chart-legend" style="gap:12px;flex-wrap:wrap">
+      <span><i style="width:8px;height:8px;border:0;border-radius:6px;background:var(--inverted)"></i>Saved €300</span>
+      <span><i style="width:8px;height:8px;border:0;border-radius:6px;background:var(--accent)"></i>Scheduled €2,450</span>
+      <span><i style="width:8px;height:8px;border:0;border-radius:6px;background:var(--body-bg)"></i>To go €250</span>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="tl-item"><span class="mk"></span><span class="txt"><span class="t-body">Jan 2027</span><span class="t-sup">I’ll check if your surplus has changed</span></span></div>
+      <div class="tl-item"><span class="mk"></span><span class="txt"><span class="t-body">5 Feb 2027</span><span class="t-sup">First deposit of €350 from your current account</span></span></div>
+      <div class="tl-item"><span class="mk"></span><span class="txt"><span class="t-body">Every 5th · 7 deposits</span><span class="t-sup">We’ll remind you the day before each one</span></span></div>
+      <div class="tl-item"><span class="mk"></span><span class="txt"><span class="t-body">5 Aug 2027</span><span class="t-sup">Last deposit, €2,750 saved for your holiday</span></span></div>
+    </div>
+  </div>
+
+  <!-- 5 · Thinking steps (prototype markup) -->
+  <div class="surface a-steps">
+    <div class="ai compact" style="padding:0"><div class="ident"><span class="dot accent"></span>Thinking…</div></div>
+    <div class="steps" id="steps" style="padding:0"></div>
+  </div>
+
+  <!-- 6 · Composer + user message (prototype markup) -->
+  <div class="surface chat-tile a-chat">
+    <div class="user" id="userMsg"><div class="bubble" id="userBubble">I want to save €3,000 for a holiday next summer, but I don't know how much I can afford to save each month.</div><span class="time">14:31</span></div>
+    <div class="chat-bar" id="chatBar"></div>
+  </div>
+
+  <!-- 7 · Pots on the home screen (prototype markup) -->
+  <div class="surface pots-tile a-pots">
+    <div class="tabs" id="tabs"><span class="tab">Balance</span><span class="tab on">Pots</span><span class="tab">Investments</span></div>
+    <div class="panel">
+      <div>
+        <div class="balance-row"><div class="value"><span class="amount" id="potsTotal">€5,002.62</span></div><span class="link">All pots (3/3) →</span></div>
+        <div class="earn" id="earn"></div>
+      </div>
+      <div class="activity" style="display:flex;flex-direction:column;gap:8px" id="potRows">
+        <div class="pot-row"><img src="prototipo/assets/img/pot-holiday.png" alt=""><span class="name"><span class="t-body">Summer holiday</span><span class="badge success">Scheduled · 5 Feb</span></span><span class="t-strong">€300.00</span></div>
+        <div class="pot-row"><img src="prototipo/assets/img/pot-gizmo.png" alt=""><span class="name"><span class="t-body">Gizmo treatment</span><span class="badge yellow">↑ 140% of base rate</span></span><span class="t-strong">€2,010.91</span></div>
+        <div class="pot-row"><img src="prototipo/assets/img/pot-newyear.png" alt=""><span class="name"><span class="t-body">New year fund</span><span class="badge blue">↑ 130% of base rate</span></span><span class="t-strong">€2,691.71</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8 · Deposit day (prototype markup) -->
+  <div class="card a-day" id="dayCard">
+    <span class="t-label">Deposit day</span>
+    <span class="t-sup">Pick the day each month the deposit leaves your current account.</span>
+    <div class="chips" id="dayChips"></div>
+    <div class="icon-line" style="font-size:12px;line-height:20px"><span data-i="calendar-days"></span><span id="dayNote">First deposit on 5 Feb 2027, then on the 5th of each month.</span></div>
+  </div>
+
+  <!-- 9 · Figures + pot actions -->
+  <div class="surface a-stats">
+    <div class="stat-row">
+      <div class="card soft"><span class="t-sup">Estimated surplus</span><span class="t-h1" data-tick="445" data-pre="€">€445</span><span class="t-sup">from Feb 2027</span></div>
+      <div class="card soft"><span class="t-sup">Monthly deposit</span><span class="t-h1" data-tick="350" data-pre="€">€350</span><span class="t-sup">on the 5th</span></div>
+      <div class="card soft"><span class="t-sup">Free each month</span><span class="t-h1" data-tick="95" data-pre="~€">~€95</span><span class="t-sup">min. €90</span></div>
+    </div>
+    <div class="pot-actions" id="potActions"></div>
+  </div>
+
+  <!-- 10 · 3D icons -->
+  <div class="surface a-icons" style="justify-content:center">
+    <div class="icons3d">
+      <span><img src="prototipo/assets/img/pot-holiday.png" alt=""></span>
+      <span><img src="prototipo/assets/img/pot-gizmo.png" alt=""></span>
+      <span><img src="prototipo/assets/img/pot-newyear.png" alt=""></span>
+      <span><img src="prototipo/assets/img/starter-goal.png" alt=""></span>
+      <span><img src="prototipo/assets/img/starter-spending.png" alt=""></span>
+      <span><img src="prototipo/assets/img/starter-card.png" alt=""></span>
+    </div>
+  </div>
+
+</div>
+
+<script src="prototipo/icons.js"></script>
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const icon = (name, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(window.ICONS || {})[name] || ''}</svg>`;
+  const eur = n => '€' + Math.round(n).toLocaleString('en-GB');
+  const eur2 = n => '€' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const ordinal = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SURPLUS = 445, BUFFER = 90, GOAL = 3000, SAVED = 300, DEPOSITS = 7;
+
+  /* ---------- Static markup that needs the icon set ---------- */
+  $$('[data-i]').forEach(el => { el.innerHTML = icon(el.dataset.i); });
+  $('#react').innerHTML = `<span class="icon-btn ghost">${icon('copy')}</span><span class="icon-btn ghost" id="thumbUp">${icon('thumbs-up')}</span><span class="icon-btn ghost">${icon('thumbs-down')}</span>`;
+  $('#earn').innerHTML = `${icon('trending-up')}Earned €455.30 in the last 12 months`;
+  $('#chatBar').innerHTML = `<span class="icon-btn sm ghost">${icon('plus')}</span><div class="input filled typing" style="flex:1"><span id="typed"></span><span class="typed-caret"></span></div><span class="icon-btn round-dark" id="sendBtn">${icon('arrow-up')}</span>`;
+  $('#potActions').innerHTML = `<button type="button" tabindex="-1">${icon('arrow-down-to-line')}Deposit</button><button type="button" tabindex="-1">${icon('arrow-up-from-line')}Withdraw</button><button type="button" tabindex="-1">${icon('settings')}Modify</button>`;
+  const opts = [[350, 'keeps the buffer'], [386, 'hits the goal'], [SURPLUS, 'whole surplus']];
+  $('#shortcuts').innerHTML = opts.map(([v, l]) => `<span class="shortcut" data-v="${v}"><span class="t-strong">${eur(v)}</span><span class="t-sup">${l}</span></span>`).join('');
+  $('#dayChips').innerHTML = [5, 10, 15, 25].map(d => `<span class="chip ${d === 5 ? 'on' : ''}" data-v="${d}" style="display:inline-flex;align-items:center">${ordinal(d)}</span>`).join('') + `<span class="btn sm ghost" style="display:inline-flex;align-items:center;gap:6px">${icon('calendar-days')}Other day</span>`;
+
+  /* ---------- Plan chart geometry (same scale as the prototype, drawn at the card's real width) ---------- */
+  const H = 130, base = 118, labels = ['Today', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+  let W = 346, xs = [], curDep = 350;
+  const y = v => base - (v / GOAL) * 96;
+  const vals = d => labels.map((_, i) => Math.min(GOAL, SAVED + i * d));
+  const geom = v => {
+    const line = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y(v[i]).toFixed(1)}`).join(' ');
+    return { line, area: `${line} L${xs[xs.length - 1].toFixed(1)},${base} L${xs[0].toFixed(1)},${base} Z`, last: [xs[xs.length - 1], y(v[v.length - 1])] };
+  };
+  function buildChart() {
+    W = Math.max(240, Math.round($('#pChart').clientWidth || 346));
+    xs = labels.map((_, i) => ((i + 0.5) * W) / labels.length);
+    const g0 = geom(vals(curDep));
+    $('#pChart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">
+        <path id="pArea" fill="var(--accent-muted)" d="${g0.area}"/>
+        <line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--border-default)"/>
+        <line x1="0" x2="${W}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="var(--text-primary)" stroke-dasharray="2 3"/>
+        <path d="M${xs[0].toFixed(1)},${y(SAVED).toFixed(1)} L${xs[xs.length - 1].toFixed(1)},${y(GOAL).toFixed(1)}" fill="none" stroke="var(--text-secondary)" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <path id="pLine" d="${g0.line}" pathLength="1" fill="none" stroke="var(--inverted)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle id="pDot" cx="${g0.last[0]}" cy="${g0.last[1]}" r="5" fill="#fff" stroke="var(--inverted)" stroke-width="2"/>
+      </svg><span class="lbl goal" style="left:0;top:${y(GOAL) - 20}px">Goal ${eur(GOAL)}</span>`;
+  }
+  buildChart();
+  let lastW = W;
+  new ResizeObserver(() => { const w = Math.round($('#pChart').clientWidth); if (Math.abs(w - lastW) > 2) { lastW = w; buildChart(); } }).observe($('#pChart'));
+  $('#pMonths').innerHTML = labels.map((m, i) => `<span class="${i === labels.length - 1 ? 'on' : ''}">${m}</span>`).join('');
+
+  /* ---------- Plan state, shared by the summary and the controls (as in the prototype) ---------- */
+  function paint(d, banner = true) {
+    curDep = d;
+    const total = Math.min(GOAL, SAVED + DEPOSITS * d), toGo = GOAL - total, free = SURPLUS - Math.round(d), pct = d / SURPLUS;
+    $('#pTotal').textContent = eur(total);
+    const b = $('#pBadge'); b.className = 'badge ' + (toGo <= 0 ? 'success' : 'neutral'); b.textContent = toGo <= 0 ? 'Goal reached' : `${eur(toGo)} to go`;
+    const g = geom(vals(d));
+    $('#pLine').setAttribute('d', g.line); $('#pArea').setAttribute('d', g.area);
+    $('#pDot').setAttribute('cx', g.last[0]); $('#pDot').setAttribute('cy', g.last[1]);
+    $('#pDeposit').textContent = eur(d);
+    $('#pSlider .fill').style.width = `calc((100% - 16px) * ${pct})`;
+    $('#pSlider .thumb').style.left = `calc(8px + (100% - 16px) * ${pct})`;
+    const st = $$('#pStack span'); st[0].style.flexGrow = Math.max(d, 1); st[1].style.flexGrow = Math.max(free, 1);
+    $('#pLegDeposit').textContent = eur(d); $('#pLegFree').textContent = eur(free);
+    if (!banner) return;
+    const ok = free >= BUFFER, el = $('#pBanner');
+    el.className = 'banner ' + (ok ? 'success' : 'warning');
+    el.innerHTML = `${icon(ok ? 'circle-check' : 'triangle-alert', 'md')}<span class="b-body">${ok ? `Keeps today’s buffer (${eur(BUFFER)}): ${eur(free)} a month left over.` : `About ${eur(free)} a month left over, below the ${eur(BUFFER)} you keep today.`}</span>`;
+    $$('#shortcuts .shortcut').forEach(s => s.classList.toggle('on', +s.dataset.v === Math.round(d)));
+  }
+  paint(350);
+  $('#steps').innerHTML = ['Reading your current account and card', 'Finding what’s left each month', 'Matching it to your €3,000 goal', 'Building your savings strategy']
+    .map(l => `<div class="step done">${icon('circle-check')}<span>${l}</span></div>`).join('');
+  $('#thumbUp').classList.add('on');
+
+  /* Tell the host page how tall the showcase is */
+  // Measure the content itself: the document's scrollHeight never drops below the frame's current height.
+  const report = () => parent.postMessage({ showcaseHeight: Math.ceil($('#bento').getBoundingClientRect().height) }, '*');
+  new ResizeObserver(report).observe($('#bento')); report();
+
+  if (RM) return; // static, final states only
+
+  /* ---------- Loop engine: paused while the host says the showcase is off screen ---------- */
+  let running = false; const waiters = [];
+  addEventListener('message', e => { if (e.source === parent && e.data && 'showcaseRun' in e.data) setRun(!!e.data.showcaseRun); });
+  const sleep = ms => new Promise(r => setTimeout(r, ms)).then(() => running ? null : new Promise(res => waiters.push(res)));
+  const easeStd = t => 1 - Math.pow(1 - t, 3);
+  const tween = (from, to, ms, fn) => new Promise(res => {
+    const t0 = performance.now();
+    const step = now => { const p = Math.min(1, (now - t0) / ms); fn(from + (to - from) * easeStd(p)); p < 1 ? requestAnimationFrame(step) : res(); };
+    requestAnimationFrame(step);
+  });
+
+  async function aiLoop() {
+    const up = $('#thumbUp'), st = $('#aiStatus');
+    const lines = ['Looking for the best way to help you…', 'Reading your last three months…', 'Here’s a plan for your summer holiday.'];
+    for (let i = 0; ; i++) { st.textContent = lines[i % 3]; up.classList.toggle('on', i % 3 === 2); await sleep(1800); }
+  }
+  async function planLoop() {
+    const sum = $('#planSummary'), seq = [386, 445, 350];
+    let cur = 350;
+    sum.classList.add('draw'); await sleep(2600);
+    for (let i = 0; ; i++) {
+      const v = seq[i % 3];
+      $$('#shortcuts .shortcut').forEach(s => s.classList.toggle('on', +s.dataset.v === v));
+      await tween(cur, v, 300, d => paint(d, false)); cur = v; paint(v);
+      await sleep(2400);
+    }
+  }
+  async function schedLoop() {
+    const bars = $$('#schedBar span'), items = $$('#timeline .tl-item');
+    for (;;) {
+      bars[0].style.width = bars[1].style.width = '0%'; items.forEach(it => it.classList.add('hide'));
+      await sleep(450); bars[0].style.width = '10%'; await sleep(250); bars[1].style.width = '81.67%';
+      for (const it of items) { await sleep(320); it.classList.remove('hide'); }
+      await sleep(4000);
+    }
+  }
+  async function stepsLoop() {
+    const labels = ['Reading your current account and card', 'Finding what’s left each month', 'Matching it to your €3,000 goal', 'Building your savings strategy'];
+    const box = $('#steps');
+    for (;;) {
+      box.innerHTML = labels.map(l => `<div class="step">${icon('circle-dashed')}<span>${l}</span></div>`).join('');
+      const rows = $$('.step', box);
+      await sleep(500);
+      for (const r of rows) {
+        r.className = 'step active'; r.querySelector('svg').outerHTML = icon('loader-circle');
+        await sleep(700);
+        r.className = 'step done'; r.querySelector('svg').outerHTML = icon('circle-check', 'pop');
+      }
+      await sleep(2600);
+    }
+  }
+  async function chatLoop() {
+    const t = $('#typed'), u = $('#userMsg'), bubble = $('#userBubble'), send = $('#sendBtn');
+    const msgs = ['Flights for late August came up. Can my plan still cover the trip if I move the deposit to the 10th?', 'I want to save €3,000 for a holiday next summer, but I don’t know how much I can afford to save each month.'];
+    for (let k = 0; ; k++) {
+      await sleep(1800); u.classList.add('hide'); await sleep(350);
+      const m = msgs[k % 2];
+      for (let i = 1; i <= m.length; i++) { t.textContent = m.slice(0, i); await sleep(m[i - 1] === ' ' ? 42 : 26); }
+      await sleep(400); send.classList.add('press'); await sleep(140); send.classList.remove('press');
+      t.textContent = ''; bubble.textContent = m; u.classList.remove('hide');
+      await sleep(2600);
+    }
+  }
+  async function potsLoop() {
+    const tabs = $$('#tabs .tab'), rows = $$('#potRows .pot-row'), amt = $('#potsTotal');
+    for (;;) {
+      tabs.forEach((x, i) => x.classList.toggle('on', i === 0)); rows.forEach(r => r.classList.add('hide')); amt.textContent = '€842.50';
+      await sleep(1000);
+      tabs.forEach((x, i) => x.classList.toggle('on', i === 1));
+      tween(4702.62, 5002.62, 800, v => { amt.textContent = eur2(v); });
+      for (const r of rows) { await sleep(240); r.classList.remove('hide'); }
+      await sleep(4000);
+    }
+  }
+  async function dayLoop() {
+    const chips = $$('#dayChips .chip'), note = $('#dayNote');
+    for (let i = 1; ; i++) {
+      await sleep(1900);
+      const c = chips[i % chips.length], n = +c.dataset.v;
+      chips.forEach(x => x.classList.toggle('on', x === c));
+      note.textContent = `First deposit on ${n} Feb 2027, then on the ${ordinal(n)} of each month.`;
+    }
+  }
+  async function statsLoop() {
+    const nums = $$('[data-tick]'), acts = $$('#potActions button');
+    for (;;) {
+      await Promise.all(nums.map(b => tween(0, +b.dataset.tick, 1000, v => { b.textContent = b.dataset.pre + Math.round(v); })));
+      for (const a of acts) { await sleep(450); a.classList.add('press'); await sleep(240); a.classList.remove('press'); }
+      await sleep(2600);
+    }
+  }
+
+  let started = false;
+  function setRun(v) {
+    running = v;
+    if (v) waiters.splice(0).forEach(f => f());
+    if (v && !started) { started = true; [aiLoop, planLoop, schedLoop, stepsLoop, chatLoop, potsLoop, dayLoop, statsLoop].forEach(f => f()); }
+  }
+  // Opened on its own (not inside the case page): just run.
+  if (parent === window) setRun(true);
+})();
+</script>
+</body>
+</html>

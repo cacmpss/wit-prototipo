@@ -1,0 +1,1650 @@
+<title>Alex's Holiday Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: each page is a light "sheet" floating on the brand gradient (#163300 → #9FE870 → #E2F6D5), radius 20 like the source vector.
+   Dark-green text always sits on the light sheet, light text only on solid #163300 surfaces (nav, quotes, code) — every pair ≥ 4.5:1.
+   Deliberately single-theme. */
+:root {
+  color-scheme: light;
+  --grad: linear-gradient(104.65deg, #163300 2.55%, #65CF21 26.22%, #9FE870 38.89%, #B1F585 48.77%, #C0F2A0 60.61%, #E2F6D5 68.52%, #EFF7D5 72.26%, #E2F6D5 77.88%, #C5E5C0 100%);
+  --ink: #163300;            /* brand inverted · solid dark surfaces */
+  --paper: rgba(255, 255, 255, 0.80);
+  --card: rgba(255, 255, 255, 0.66);
+  --card-strong: rgba(255, 255, 255, 0.92);
+  --line: rgba(22, 51, 0, 0.12);
+  --line-strong: rgba(22, 51, 0, 0.24);
+  --fg: #10220a;             /* ≥ 10:1 on the sheet */
+  --muted: #3a4f27;          /* ≥ 5:1 on the sheet, even over the dark end of the gradient */
+  --dim: #3a4f27;
+  --link: #0c5700;
+  --lime: #9fe870;
+  --mint: #e2f6d5;
+  --on-ink: #ffffff;
+  --on-ink-muted: rgba(255, 255, 255, 0.78);
+  --good: #0c5700;  --good-soft: #c5e5c0;
+  --warn: #584400;  --warn-soft: #f8da9d;
+  --bad: #89001a;   --bad-soft: #facecb;
+  --font: "Geist", "Inter", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --rail: 64px;
+  --pad: clamp(20px, 4vw, 48px);
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+* { box-sizing: border-box; }
+html, body { background: #9fe870; color: var(--fg); }
+body {
+  margin: 0; font-family: var(--font); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden;
+}
+body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--grad); }
+a { color: var(--link); text-decoration-color: rgba(12, 87, 0, .4); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
+img { max-width: 100%; display: block; }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+p { margin: 0; }
+.mono { font-family: var(--mono); }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------- App shell · Astryx "Shell Nav": a menu bar with command search over a resizable hierarchy rail ---------- */
+.app {
+  position: fixed; z-index: 1;
+  top: max(32px, env(safe-area-inset-top, 0px)); bottom: max(32px, env(safe-area-inset-bottom, 0px));
+  left: max(48px, env(safe-area-inset-left, 0px)); right: max(48px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: var(--railw, 224px) minmax(0, 1fr); grid-template-rows: 56px minmax(0, 1fr);
+  background: rgba(244, 249, 240, 0.86); border: 1px solid rgba(255,255,255,.75); border-radius: 20px;
+  -webkit-backdrop-filter: blur(22px) saturate(1.15); backdrop-filter: blur(22px) saturate(1.15);
+  box-shadow: 0 24px 70px rgba(22,51,0,.2); overflow: hidden;
+}
+.menubar { grid-column: 1 / -1; grid-row: 1; display: flex; align-items: center; gap: 2px; padding: 0 12px 0 14px; min-width: 0; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 14px; color: var(--fg); text-decoration: none; margin-right: 12px; white-space: nowrap; }
+.brand img { width: 24px; height: 24px; }
+.menu { position: relative; }
+.menu > button { padding: 7px 10px; border-radius: 8px; border: 0; background: none; font: 500 14px/1.2 var(--font); color: var(--fg); cursor: pointer; }
+.menu > button:hover, .menu.open > button { background: rgba(22,51,0,.07); }
+.menu-pop { position: absolute; top: calc(100% + 6px); left: 0; min-width: 230px; padding: 6px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(22,51,0,.16); display: none; z-index: 30; }
+.menu.open .menu-pop { display: grid; }
+.menu-pop a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; font-size: 14px; }
+.menu-pop a .n { font: 500 11px/1 var(--mono); color: var(--muted); width: 18px; }
+.menu-pop a:hover, .menu-pop a.active { background: var(--mint); }
+.menubar .sp { flex: 1; min-width: 8px; }
+.search { display: flex; align-items: center; gap: 8px; width: min(300px, 30vw); height: 34px; padding: 0 8px 0 10px; margin-right: 6px; border-radius: 10px; border: 1px solid var(--line-strong); background: #fff; color: var(--muted); font: 400 13.5px/1 var(--font); cursor: pointer; }
+.search .lbl { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool-btn { height: 34px; min-width: 34px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; border: 0; background: none; color: var(--fg); font: 600 13.5px/1 var(--font); cursor: pointer; text-decoration: none; }
+.tool-btn:hover { background: rgba(22,51,0,.07); }
+.tool-btn.solid { background: var(--ink); color: #fff; margin-left: 4px; }
+.tool-btn.solid:hover { background: #0c5700; }
+.rail-toggle { display: none; }
+
+.rail { grid-row: 2; grid-column: 1; position: relative; overflow-y: auto; padding: 4px 12px 16px 10px; }
+.resizer { position: absolute; top: 0; bottom: 0; right: 0; width: 10px; cursor: col-resize; touch-action: none; }
+.resizer::after { content: ""; position: absolute; top: 8px; bottom: 8px; right: 4px; width: 2px; border-radius: 2px; background: transparent; transition: background .15s; }
+.resizer:hover::after, .resizer.drag::after { background: var(--line-strong); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .group > ul { margin-left: 15px; padding-left: 8px; border-left: 1px solid var(--line); }
+.node { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--fg); font: 500 14px/1.3 var(--font); text-align: left; text-decoration: none; cursor: pointer; }
+.node:hover { background: rgba(22,51,0,.06); }
+.node.active { background: rgba(22,51,0,.11); font-weight: 650; }
+.node svg { flex: none; color: var(--muted); }
+.node .chev { transition: transform .15s var(--ease); }
+.group.closed > .node .chev { transform: rotate(-90deg); }
+.group.closed > ul { display: none; }
+.node .n { font: 500 11px/1 var(--mono); color: var(--muted); width: 18px; flex: none; }
+.secs { margin: 2px 0 6px 26px; }
+.secs a { display: block; padding: 4px 8px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 13px; line-height: 1.35; border-left: 2px solid transparent; }
+.secs a:hover { color: var(--fg); background: rgba(22,51,0,.05); }
+.secs a.on { color: var(--fg); font-weight: 600; border-left-color: var(--ink); border-radius: 0 6px 6px 0; }
+.rail-foot { margin-top: 14px; padding: 12px 8px 0; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+
+.content { grid-row: 2; grid-column: 2; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; margin: 0 8px 8px 0; border-radius: 14px; background: rgba(255,255,255,.95); border: 1px solid var(--line); position: relative; }
+.page { display: none; padding: var(--pad); }
+.page.on { display: block; }
+/* Page change: the old page eases out (170ms), the new one rises in (420ms, decelerating). */
+.page.fade { animation: pageIn .42s cubic-bezier(.22, .61, .36, 1) both; }
+.page.leave { animation: pageOut .17s cubic-bezier(.4, 0, 1, 1) both; pointer-events: none; }
+@keyframes pageIn { from { opacity: .15; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pageOut { to { opacity: 0; transform: translateY(-8px); } }
+.col, .wide { max-width: 1200px; margin: 0 auto; }
+
+/* Command palette */
+.palette { position: fixed; inset: 0; z-index: 130; display: none; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px; background: rgba(22,51,0,.35); }
+.palette.on { display: flex; }
+.pal-box { width: min(560px, 100%); background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(22,51,0,.35); overflow: hidden; border: 1px solid var(--line); }
+.pal-box input { width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 16px 18px; font: 500 16px/1.3 var(--font); color: var(--fg); outline: none; background: #fff; }
+.pal-list { max-height: 52vh; overflow-y: auto; padding: 6px; margin: 0; list-style: none; }
+.pal-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; border-radius: 10px; color: var(--fg); text-decoration: none; font-size: 14px; }
+.pal-list a span { color: var(--muted); font: 500 12px/1.6 var(--mono); white-space: nowrap; }
+.pal-list a.sel { background: var(--mint); }
+.pal-empty { padding: 14px 16px; color: var(--muted); font-size: 14px; }
+
+@media (max-width: 899px) {
+  .app { --pad: 16px; inset: 0; border-radius: 0; border: 0; grid-template-columns: minmax(0,1fr); grid-template-rows: calc(56px + env(safe-area-inset-top, 0px)) minmax(0,1fr); }
+  .menubar { padding: env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px)); }
+  .menu, .search .lbl, .search kbd, .tool-btn .lbl { display: none; }
+  .search { width: 34px; padding: 0; justify-content: center; margin: 0; }
+  .rail-toggle { display: inline-flex; }
+  .rail { grid-area: auto; position: absolute; z-index: 20; top: calc(56px + env(safe-area-inset-top, 0px)); bottom: 0; left: 0; width: min(300px, 86vw); background: #f4f9f0; box-shadow: 20px 0 50px rgba(22,51,0,.2); transform: translateX(-102%); transition: transform .2s var(--ease); padding-left: max(10px, env(safe-area-inset-left, 0px)); }
+  .app.rail-open .rail { transform: none; }
+  .resizer { display: none; }
+  .content { grid-column: 1; margin: 0; border-radius: 0; border: 0; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .page { padding: 20px var(--pad) 40px; }
+}
+
+/* ---------- Type & blocks ---------- */
+.tag {
+  justify-self: start; display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+  background: var(--ink); font: 600 11px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--lime);
+}
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
+.page-head { display: grid; gap: 14px; margin-bottom: 40px; }
+.page-head h1 { font-size: clamp(30px, 4.2vw, 44px); line-height: 1.1; font-weight: 700; }
+.lead { font-size: 18px; line-height: 1.6; color: var(--muted); max-width: 66ch; }
+.lead b, .lead strong { color: var(--fg); font-weight: 600; }
+.sec { margin-top: 64px; display: grid; gap: 18px; scroll-margin-top: 32px; }
+.sec > h2 { font-size: 24px; font-weight: 650; }
+.sec > .sub { color: var(--muted); max-width: 66ch; margin-top: -8px; }
+.eyebrow { font: 600 11px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--link); }
+.eyebrow.dim { color: var(--dim); }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 980px) { .g4, .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .g2, .g3, .g4, .g5 { grid-template-columns: minmax(0, 1fr); } }
+.card h3 { font-size: 17px; font-weight: 650; line-height: 1.3; }
+.card p { color: var(--muted); font-size: 14.5px; }
+.card .meta { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font: 500 12px/1.5 var(--mono); color: var(--muted); }
+.card .meta b { color: var(--link); font-weight: 600; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.note { border: 1px solid var(--line); border-left: 3px solid var(--ink); border-radius: 12px; background: linear-gradient(90deg, var(--mint), rgba(226,246,213,.35)); padding: 16px 18px; font-size: 15px; color: var(--muted); }
+.note b { color: var(--fg); }
+.note .eyebrow { margin-bottom: 6px; display: block; }
+blockquote.pull { margin: 0; padding: 22px 24px; border-radius: 16px; background: var(--ink); font-size: 20px; line-height: 1.45; font-weight: 550; color: var(--on-ink); }
+blockquote.pull cite { display: block; margin-top: 10px; font: 500 12px/1.4 var(--mono); color: var(--lime); font-style: normal; letter-spacing: .04em; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.facts > div { padding: 16px 16px 16px 0; display: grid; gap: 6px; }
+.facts > div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+.facts .k { font: 600 10.5px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.facts .v { font-weight: 600; font-size: 15px; line-height: 1.35; }
+@media (max-width: 760px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .facts > div:nth-child(3) { padding-left: 0; border-left: 0; } .facts > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+ul.clean { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ul.clean li { position: relative; padding-left: 18px; color: var(--muted); font-size: 15px; }
+ul.clean li::before { content: ""; position: absolute; left: 2px; top: .7em; width: 6px; height: 6px; border-radius: 2px; background: #65cf21; }
+ul.clean li b { color: var(--fg); font-weight: 600; }
+ol.num { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: n; }
+ol.num li { counter-increment: n; position: relative; padding-left: 44px; color: var(--muted); }
+ol.num li::before { content: counter(n, decimal-leading-zero); position: absolute; left: 0; top: .3em; font: 600 12px/1.2 var(--mono); color: var(--link); }
+ol.num li b { color: var(--fg); font-weight: 600; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 600 10.5px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); background: rgba(22,51,0,.04); }
+td { color: var(--muted); }
+td.k { color: var(--fg); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td { color: var(--fg); font-weight: 650; background: var(--mint); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font: 600 11.5px/1.6 var(--font); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.neutral { background: rgba(22,51,0,.08); color: var(--muted); }
+.pill.accent { background: var(--ink); color: var(--lime); }
+.yes, .no, .part { font-weight: 700; }
+.yes { color: var(--good); } .no { color: var(--bad); } .part { color: var(--warn); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 12px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--on-ink); font: 600 15px/1 var(--font); text-decoration: none; transition: transform .15s var(--ease), background .15s; }
+.btn:hover { transform: translateY(-1px); background: #0c5700; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { background: var(--mint); }
+kbd { font: 600 11px/1 var(--mono); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.7); color: var(--fg); }
+
+/* Pager */
+.pager { margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pager a { display: grid; gap: 4px; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--fg); transition: border-color .15s, background .15s; }
+.pager a:hover { border-color: var(--ink); background: var(--card-strong); }
+.pager a.next { text-align: right; }
+.pager .eyebrow { color: var(--dim); }
+.pager .t { font-weight: 600; }
+
+/* ---------- Cover ---------- */
+.cover { display: none; }
+.cover.on { display: flex; flex-direction: column; min-height: 100%; }
+.cover-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font: 500 12px/1.4 var(--mono); color: var(--muted); }
+.cover-top b { color: var(--fg); font-weight: 600; }
+.banner { align-self: center; margin-top: 18px; padding: 7px 14px; border-radius: 10px; background: var(--warn-soft); font-size: 13px; color: var(--warn); text-align: center; }
+.banner b { color: var(--fg); }
+.cover-main { flex: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 48px; align-items: center; max-width: 1180px; width: 100%; margin: 0 auto; padding-block: 40px; }
+@media (max-width: 980px) { .cover-main { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+.cover h1 { font-size: clamp(42px, 5.4vw, 84px); line-height: .98; font-weight: 750; letter-spacing: -0.045em; color: var(--ink); }
+.cover h1 .l2 { display: block; margin-top: 10px; font: 500 clamp(26px, 4vw, 48px)/1.1 var(--mono); letter-spacing: -0.02em; color: #2b6a0e; }
+.caret { display: inline-block; width: .55em; color: #2b6a0e; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.cover .quote { margin-top: 28px; padding-left: 16px; border-left: 3px solid var(--ink); font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 46ch; }
+.cover .quote b { color: var(--fg); }
+.cover .cta { margin-top: 32px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font: 500 12px/1 var(--mono); color: var(--muted); }
+.cover-foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--line-strong); font: 500 12px/1.5 var(--mono); color: var(--muted); }
+.cover-foot .stats { display: flex; gap: 22px; flex-wrap: wrap; }
+.cover-foot .stats b { color: var(--fg); }
+
+/* Chat demo · styled like the product (light, green accents) */
+.demo { width: 100%; max-width: 440px; justify-self: center; border-radius: 26px; border: 1px solid var(--line); background: #ffffff; box-shadow: 0 40px 90px rgba(22,51,0,.22); overflow: hidden; }
+.demo-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.demo-head img { width: 26px; height: 26px; }
+.demo-head .n { font-weight: 600; font-size: 14px; flex: 1; color: var(--fg); }
+.demo-head .s { font: 500 11px/1 var(--mono); color: var(--good); display: flex; align-items: center; gap: 6px; }
+.demo-head .s::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #198100; }
+.demo-body { height: 392px; padding: 16px; display: flex; flex-direction: column; gap: 12px; justify-content: flex-end; overflow: hidden; }
+.msg { max-width: 86%; padding: 10px 13px; border-radius: 14px; font-size: 14px; line-height: 1.45; animation: msgIn .35s var(--ease-out) both; }
+.msg.me { align-self: flex-end; background: var(--good-soft); color: var(--ink); border-bottom-right-radius: 5px; font-weight: 500; }
+.msg.ai { align-self: flex-start; background: #f1f1f1; color: #171717; border-bottom-left-radius: 5px; }
+.msg.ai .lbl { display: block; font: 600 10.5px/1 var(--mono); color: var(--good); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.dots { display: inline-flex; gap: 4px; padding: 12px 14px; }
+.dots i { width: 6px; height: 6px; border-radius: 50%; background: #737373; animation: dot 1s infinite ease-in-out; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.sum { align-self: stretch; border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #fafafa; animation: msgIn .35s var(--ease-out) both; }
+.sum .row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #525252; }
+.sum .row b { color: #171717; font-variant-numeric: tabular-nums; }
+.sum .bar { height: 6px; border-radius: 6px; background: #e5e5e5; margin: 8px 0 4px; overflow: hidden; }
+.sum .bar i { display: block; height: 100%; width: 0; background: #198100; border-radius: 6px; transition: width .6s var(--ease); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; animation: msgIn .35s var(--ease-out) both; }
+.chips span { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 12.5px; color: var(--ink); font-weight: 500; }
+.chips span.p { background: var(--ink); color: #fff; border-color: transparent; font-weight: 600; }
+.demo-input { display: flex; align-items: center; gap: 10px; margin: 0 12px 12px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: #fafafa; font-size: 13.5px; color: #525252; min-height: 44px; }
+.demo-input .txt { flex: 1; min-width: 0; color: #171717; }
+.demo-input .txt:empty::before { content: "Ask the assistant"; color: #6b6b6b; }
+.demo-input .send { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; color: var(--lime); flex: none; }
+.replay { margin: -4px 12px 12px; display: flex; justify-content: flex-end; }
+.replay button { background: none; border: 0; color: #525252; font: 500 11.5px/1 var(--mono); cursor: pointer; padding: 6px; }
+.replay button:hover { color: var(--ink); }
+
+.veil { position: fixed; inset: 0; z-index: 100; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease); }
+.veil.on { opacity: 1; }
+
+/* ---------- Context ---------- */
+.route { display: flex; flex-direction: column; gap: 10px; }
+.route .ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--mint); border: 1px solid var(--line); color: var(--ink); }
+.route .fail { margin-top: auto; padding: 10px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad); font-size: 13.5px; font-weight: 600; }
+.matrix td, .matrix th { text-align: center; }
+.matrix td:first-child, .matrix th:first-child { text-align: left; }
+.matrix tr.us td { background: var(--mint); color: var(--fg); }
+.mk { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; font-size: 13px; font-weight: 700; }
+.mk.y { background: var(--good-soft); color: var(--good); }
+.mk.n { background: var(--bad-soft); color: var(--bad); }
+.mk.p { background: var(--warn-soft); color: var(--warn); }
+.versus { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 14px; align-items: stretch; }
+.versus .vs { align-self: center; font: 600 12px/1 var(--mono); color: var(--dim); }
+.versus .card { display: grid; gap: 10px; }
+.versus .card.pick { border-color: var(--ink); background: var(--card-strong); }
+.versus .q { font-size: 19px; font-weight: 650; line-height: 1.3; }
+.versus .calc { font: 500 15px/1.5 var(--mono); color: var(--link); }
+@media (max-width: 760px) { .versus { grid-template-columns: minmax(0,1fr); } .versus .vs { justify-self: center; } }
+.req { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
+.req > div { padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 14px; color: var(--muted); display: grid; gap: 8px; align-content: start; }
+.req .n { font: 600 12px/1 var(--mono); color: var(--link); }
+.req b { color: var(--fg); font-weight: 600; }
+@media (max-width: 980px) { .req { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 520px) { .req { grid-template-columns: minmax(0,1fr); } }
+
+/* ---------- Alex ---------- */
+.persona { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 14px; }
+@media (max-width: 860px) { .persona { grid-template-columns: minmax(0,1fr); } }
+.persona-card { display: grid; gap: 14px; align-content: start; }
+.persona-card .who { display: flex; gap: 14px; align-items: center; }
+.persona-card .who .ph { flex: none; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; border: 2px solid var(--ink); background: #e9d6c8; }
+.persona-card .who .ph img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); }
+.persona-card h3 { font-size: 24px; }
+.persona-card .role { color: var(--link); font-size: 14px; font-weight: 600; }
+.kv { display: grid; gap: 6px; font-size: 14px; }
+.kv div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line-strong); color: var(--muted); }
+.kv b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.budget-bars { display: grid; gap: 18px; }
+.bb .top { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.bb .top b { color: var(--fg); }
+.bb .track { display: flex; height: 30px; border-radius: 8px; overflow: hidden; background: rgba(22,51,0,.06); }
+.bb .track span { display: flex; align-items: center; padding: 0 10px; font: 600 12px/1 var(--mono); white-space: nowrap; overflow: hidden; }
+.bb .exp { background: rgba(22,51,0,.14); color: var(--fg); }
+.bb .sur { background: var(--lime); color: var(--ink); }
+.stickies { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .stickies { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 560px) { .stickies { grid-template-columns: minmax(0,1fr); } }
+.sticky h4 { font-size: 15px; font-weight: 650; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.sticky h4 i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; border: 1px solid rgba(22,51,0,.2); }
+
+/* ---------- Journey ---------- */
+.journey-wrap { position: relative; margin-inline: calc(-1 * var(--pad)); overflow: hidden; padding: 10px 0 18px; }
+.journey-track { display: flex; width: max-content; padding: 0 var(--pad); will-change: transform; }
+.jstep { display: flex; align-items: flex-start; }
+.jcard { width: 268px; flex: none; border-radius: 18px; border: 1px solid var(--line); background: var(--card); padding: 14px; cursor: pointer; display: grid; gap: 12px; transition: border-color .2s, background .2s, transform .25s var(--ease), box-shadow .25s; text-align: left; color: inherit; font: inherit; }
+.jcard:hover, .jcard.on { border-color: var(--ink); background: var(--card-strong); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(22,51,0,.14); }
+.jcard .stage { font: 600 10.5px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); display: flex; justify-content: space-between; gap: 8px; }
+.jcard.main .stage em { font-style: normal; color: var(--warn); background: var(--warn-soft); padding: 2px 6px; border-radius: 6px; }
+.jcard .shot { display: block; padding: 0 12px; }
+.jcard .shot img { width: 100%; height: auto; aspect-ratio: 444 / 908; object-fit: contain; filter: drop-shadow(0 12px 20px rgba(22,51,0,.16)); }
+.jcard h3 { font-size: 16.5px; line-height: 1.3; }
+.jcard .q { font-size: 13.5px; color: var(--muted); font-style: italic; }
+.jcard .rq { font: 600 11px/1.4 var(--mono); color: var(--good); }
+.conn { width: 48px; flex: none; align-self: center; height: 2px; margin-top: -120px; position: relative; background: var(--line-strong); overflow: hidden; }
+.conn::after { content: ""; position: absolute; top: -1px; left: -30%; width: 30%; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, var(--ink), transparent); animation: travel 2.4s var(--ease) infinite; }
+@keyframes travel { to { left: 100%; } }
+.journey-hint { display: flex; justify-content: center; gap: 10px; font: 500 12px/1 var(--mono); color: var(--dim); margin-top: 6px; }
+@media (hover: none), (pointer: coarse) {
+  .journey-wrap { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+  .jstep { scroll-snap-align: start; }
+}
+.jdetail { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; transition: opacity .15s var(--ease); }
+.jdetail.swap { opacity: 0; }
+@media (max-width: 900px) { .jdetail { grid-template-columns: minmax(0,1fr); } }
+.jdetail .card h4 { font: 600 10.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+.jdetail .card p { color: var(--fg); font-size: 14.5px; }
+.jdetail .card.risk { background: #fff4f3; }
+.jdetail .card.risk h4 { color: var(--bad); }
+.jdetail .card.opp { background: var(--mint); }
+.jdetail .card.opp h4 { color: var(--good); }
+.jdetail .card.doubt { background: var(--ink); border-color: var(--ink); }
+.jdetail .card.doubt h4 { color: var(--lime); }
+.jdetail .card.doubt p { color: var(--on-ink); font-style: italic; font-size: 16px; }
+.jhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.jhead h3 { font-size: 20px; }
+
+/* ---------- Solutions ---------- */
+.concept { display: flex; flex-direction: column; gap: 12px; }
+.concept.win { border-color: var(--good); background: linear-gradient(180deg, var(--mint), var(--card-strong) 60%); }
+.score { display: grid; gap: 8px; }
+.score .r { display: grid; grid-template-columns: 74px 1fr 44px; gap: 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.score .t { height: 8px; border-radius: 8px; background: rgba(22,51,0,.08); overflow: hidden; }
+.score .t i { display: block; height: 100%; border-radius: 8px; }
+.score .v i { background: #198100; } .score .e i { background: #c99700; }
+.score .r b { font: 600 13px/1 var(--mono); color: var(--fg); text-align: right; }
+.wfs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .wfs { grid-template-columns: minmax(0,1fr); } }
+.wf { display: flex; flex-direction: column; gap: 12px; }
+.wf .img { border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line); aspect-ratio: 4 / 3; cursor: zoom-in; padding: 0; }
+.wf .img img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.wf.win { border-color: var(--good); background: var(--card-strong); }
+.wf .tally { display: flex; justify-content: space-between; align-items: center; font: 600 13px/1 var(--mono); }
+
+/* ---------- Prototype ---------- */
+.proto-frame { border-radius: 18px; overflow: hidden; border: 1px solid var(--line-strong); background: #f1f1f1; box-shadow: 0 30px 70px rgba(22,51,0,.2); }
+.proto-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ink); font: 500 12px/1 var(--mono); color: var(--on-ink-muted); flex-wrap: wrap; }
+.proto-bar kbd { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); color: var(--on-ink); }
+.proto-bar .dots3 { display: flex; gap: 6px; } .proto-bar .dots3 i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.proto-bar .sp { flex: 1; }
+.proto-frame iframe { display: block; width: 100%; height: min(820px, 86vh); border: 0; background: #f1f1f1; }
+@media (max-width: 899px) { .proto-frame iframe { height: 760px; } }
+.steps10 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 24px; }
+@media (max-width: 760px) { .steps10 { grid-template-columns: minmax(0,1fr); } }
+.steps10 div { display: grid; grid-template-columns: 30px 1fr; gap: 8px; font-size: 14.5px; color: var(--muted); padding: 10px 0; border-bottom: 1px solid var(--line); }
+.steps10 div b { color: var(--fg); font-weight: 600; }
+.steps10 div .n { font: 600 12px/1.6 var(--mono); color: var(--link); }
+.steps10 div.key { color: var(--fg); }
+.steps10 div.key .n { color: var(--warn); }
+
+/* ---------- Gallery ---------- */
+.strip { display: flex; gap: 18px; overflow-x: auto; padding: 8px 6px 24px; scroll-snap-type: x proximity; }
+.strip::-webkit-scrollbar { height: 8px; } .strip::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; }
+.shot-card { flex: none; width: 210px; display: grid; gap: 8px; scroll-snap-align: start; }
+.shot-card button { padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 30px; }
+.shot-card img { width: 210px; height: auto; aspect-ratio: 444 / 908; object-fit: contain; filter: drop-shadow(0 14px 24px rgba(22,51,0,.18)); transition: transform .2s var(--ease); }
+.shot-card button:hover img { transform: translateY(-3px); }
+.shot-card .t { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.shot-card .d { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.lightbox { position: fixed; inset: 0; z-index: 120; display: none; place-items: center; background: rgba(22,51,0,.9); padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); cursor: zoom-out; }
+.lightbox.on { display: grid; animation: pageIn .15s var(--ease) both; }
+.lightbox img { max-height: 88vh; max-width: min(1200px, 100%); width: auto; border-radius: 18px; }
+.lightbox img[src$=".jpg"] { background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+.lightbox .cap { margin-top: 12px; text-align: center; color: var(--mint); font-size: 14px; }
+
+/* Motion tokens */
+.mt { display: grid; gap: 8px; }
+.mt .row { display: grid; grid-template-columns: 120px 76px 1fr; gap: 14px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); cursor: default; }
+.mt .row .nm { font: 600 12.5px/1.2 var(--mono); color: var(--fg); }
+.mt .row .ms { font: 500 12.5px/1 var(--mono); color: var(--muted); }
+.mt .lane { position: relative; height: 18px; border-radius: 9px; background: rgba(22,51,0,.07); }
+.mt .lane i { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); transition-property: left; }
+.mt .row:hover .lane i, .mt .row.play .lane i { left: calc(100% - 15px); }
+.mt .use { grid-column: 3; font-size: 12.5px; color: var(--muted); margin-top: -2px; }
+@media (max-width: 560px) { .mt .row { grid-template-columns: 1fr 70px; } .mt .lane, .mt .use { grid-column: 1 / -1; } }
+
+/* ---------- Design system ---------- */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.sw { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--card-strong); }
+.sw i { display: block; height: 58px; border-bottom: 1px solid var(--line); }
+.sw div { padding: 8px 10px; display: grid; gap: 2px; }
+.sw b { font-size: 12.5px; font-weight: 600; }
+.sw span { font: 500 11px/1.3 var(--mono); color: var(--muted); }
+.radii { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.radii div { display: grid; gap: 6px; justify-items: center; font: 500 11px/1.3 var(--mono); color: var(--muted); }
+.radii i { width: 64px; height: 64px; border: 2px solid var(--ink); border-right-color: transparent; border-bottom-color: transparent; background: var(--mint); }
+.type-spec { display: grid; gap: 12px; }
+.type-spec .r { display: grid; grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); gap: 20px; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.type-spec .r > span:first-child { font: 500 11.5px/1.4 var(--mono); color: var(--dim); white-space: nowrap; }
+@media (max-width: 760px) { .type-spec .r { grid-template-columns: minmax(0, 1fr); gap: 4px; } .type-spec .r > span:first-child { white-space: normal; } }
+.comp-groups { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .comp-groups { grid-template-columns: minmax(0,1fr); } }
+.comp-groups ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.comp-groups li { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.75); font-size: 13px; color: var(--fg); }
+.sheet-imgs { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 900px) { .sheet-imgs { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.sheet-imgs button { padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; cursor: zoom-in; aspect-ratio: 3 / 4; width: 100%; }
+.sheet-imgs img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.sheet-imgs figcaption { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- Components in motion: the prototype's own components, framed ---------- */
+.showcase-frame { display: block; width: calc(100% + 2 * var(--pad)); margin-inline: calc(-1 * var(--pad)); max-width: none; height: 1100px; border: 0; background: transparent; }
+#system > .wide { max-width: none; }
+@media (max-width: 899px) { .showcase-frame { width: calc(100% + 32px); margin-inline: -16px; } }
+
+/* ---------- AI process ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+@media (max-width: 900px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.stat { padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); display: grid; gap: 4px; }
+.stat b { font: 600 30px/1 var(--mono); color: var(--ink); letter-spacing: -0.03em; }
+.stat span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.tool { display: flex; flex-direction: column; gap: 10px; }
+.tool .role { align-self: flex-start; }
+.tool dl { margin: 0; display: grid; gap: 10px; }
+.tool dt { font: 600 10.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.tool dd { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.loop { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); }
+.loop > div { position: relative; padding: 16px 18px 16px 0; display: grid; gap: 6px; align-content: start; }
+.loop > div + div { padding-left: 18px; border-left: 1px solid var(--line); }
+.loop b { font-size: 16px; }
+.loop span { font-size: 13.5px; color: var(--muted); }
+.loop .n { font: 600 11px/1 var(--mono); color: var(--link); }
+@media (max-width: 900px) { .loop { grid-template-columns: minmax(0,1fr); } .loop > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); } }
+.moment { display: grid; gap: 10px; }
+.moment .steps { display: grid; gap: 8px; }
+.moment .steps div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; font-size: 14px; color: var(--muted); }
+.moment .steps span { font: 600 10.5px/1.6 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.moment .steps div.res span { color: var(--good); }
+.moment .steps div.res { color: var(--fg); }
+.codex { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.codex figure { margin: 0; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: radial-gradient(circle at 50% 35%, #ffffff, rgba(255,255,255,.55) 70%); display: grid; gap: 6px; justify-items: center; }
+.codex img { width: 72px; height: 72px; object-fit: contain; }
+.codex figcaption { font: 500 11px/1.3 var(--mono); color: var(--muted); text-align: center; }
+
+/* ---------- Handoff ---------- */
+pre.code { margin: 0; padding: 16px 18px; border-radius: 14px; background: var(--ink); overflow-x: auto; font: 500 13px/1.6 var(--mono); color: var(--mint); }
+pre.code .c { color: #a9c79a; } pre.code .k { color: var(--lime); } pre.code .s { color: #ffd7a8; }
+.split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+@media (max-width: 860px) { .split { grid-template-columns: minmax(0,1fr); } }
+.handoff-img { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #fff; cursor: zoom-in; padding: 0; }
+
+/* ---------- Summary ---------- */
+.sum-journey { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
+@media (max-width: 900px) { .sum-journey { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 520px) { .sum-journey { grid-template-columns: minmax(0,1fr); } }
+.sum-journey > div { display: grid; gap: 8px; align-content: start; }
+.sum-journey img { width: 100%; max-width: 220px; height: auto; aspect-ratio: 444 / 908; object-fit: contain; justify-self: center; filter: drop-shadow(0 12px 20px rgba(22,51,0,.16)); }
+.sum-journey b { font-size: 14px; }
+.sum-journey span { font-size: 12.5px; color: var(--muted); }
+.links { display: grid; gap: 8px; }
+.links a { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--fg); font-size: 14.5px; font-weight: 500; }
+.links a:hover { border-color: var(--ink); background: var(--card-strong); }
+.links a span { color: var(--muted); font: 500 12px/1.6 var(--mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  .caret { animation: none; }
+  .conn::after { display: none; }
+}
+</style>
+
+<div class="veil" id="veil"></div>
+
+<div class="app" id="app">
+  <header class="menubar">
+    <button class="tool-btn rail-toggle" id="railToggle" type="button" aria-label="Show pages" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <a class="brand" href="#cover"><img src="assets/codex/verde-alta-resolucao.png" alt="">Alex's Holiday Plan</a>
+    <span class="sp"></span>
+    <button class="search" id="searchBtn" type="button" aria-label="Search pages and sections">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span class="lbl">Search pages and sections…</span><kbd>⌘K</kbd>
+    </button>
+    <a class="tool-btn" href="#prototype" title="Open the prototype" aria-label="Open the prototype">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg>
+    </a>
+    <a class="tool-btn solid" href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge" target="_blank" rel="noopener"><span class="lbl">Figma</span><span aria-hidden="true">↗</span><span class="sr" style="position:absolute;left:-9999px">Open the Figma file</span></a>
+  </header>
+  <nav class="rail" id="rail" aria-label="Pages">
+    <ul class="tree" id="tree"></ul>
+    <div class="rail-foot">Use <kbd>←</kbd> <kbd>→</kbd> to move between pages, <kbd>⌘K</kbd> to search.</div>
+    <div class="resizer" id="resizer" aria-hidden="true"></div>
+  </nav>
+  <main class="content" id="content">
+
+<!-- ================= COVER ================= -->
+<section class="page cover" id="cover" data-title="Cover">
+  <div class="cover-top">
+    <span>● <b>UX case</b> · AI-native mobile banking</span>
+    <span>Wit · AI-Assisted Design Challenge · Nov 2026</span>
+  </div>
+  <div class="banner">Built in <b>1 day</b> with Claude Code, Figma MCP and Codex. Figma file, prototype and handoff linked inside.</div>
+  <div class="cover-main">
+    <div>
+      <h1>Alex's Holiday Plan<span class="l2">AI savings assistant<span class="caret">_</span></span></h1>
+      <p class="quote">Alex knows where he's going, how much it costs and when. <b>What he doesn't know is how much he can afford to put aside each month.</b></p>
+      <div class="cta">
+        <a class="btn" href="#context" data-go="context">Open the case <span aria-hidden="true">→</span></a>
+        <span>or press <kbd>Enter</kbd></span>
+      </div>
+    </div>
+    <div class="demo" aria-label="Animated example of the conversation">
+      <div class="demo-head"><img src="assets/codex/verde-alta-resolucao.png" alt=""><span class="n">Assistant</span><span class="s">your account</span></div>
+      <div class="demo-body" id="demoBody"></div>
+      <div class="demo-input"><span class="txt" id="demoTxt"></span><span class="send" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span></div>
+      <div class="replay"><button type="button" id="replay">↻ replay</button></div>
+    </div>
+  </div>
+  <div class="cover-foot">
+    <span>Camille Campos · Product Designer</span>
+    <span class="stats"><span><b>5</b> journey steps</span><span><b>23</b> screens</span><span><b>10</b>-step prototype</span><span><b>1</b> day</span></span>
+  </div>
+</section>
+
+<!-- ================= 01 CONTEXT ================= -->
+<section class="page" id="context" data-title="Context">
+  <div class="col">
+    <header class="page-head">
+      <span class="tag">01 · Context</span>
+      <h1>Alex already knows the goal. The hard part is the monthly number.</h1>
+      <p class="lead">The challenge: design an AI-native mobile banking experience that turns a person's intent into a <b>clear, trustworthy and actionable journey</b>. The example request is one most of us have said out loud at some point.</p>
+    </header>
+    <blockquote class="pull">“I want to save €3,000 for a holiday next summer, but I don't know how much I can afford to save every month.”<cite>Example request · Wit challenge brief</cite></blockquote>
+    <div class="facts" style="margin-top:28px">
+      <div><span class="k">Challenge</span><span class="v">Wit · AI-Assisted Design</span></div>
+      <div><span class="k">Platform</span><span class="v">Mobile banking app</span></div>
+      <div><span class="k">Time spent</span><span class="v">1 day</span></div>
+      <div><span class="k">Status</span><span class="v">Prototype ready to test</span></div>
+    </div>
+
+    <section class="sec" id="today">
+      <h2>How people solve this today</h2>
+      <p class="sub">There are three common routes. Each one gets part of the way, then stops.</p>
+      <div class="grid g3">
+        <article class="card route">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 6h4M9 11h6M9 15h6"/></svg></span>
+          <h3>Dig through the bank app</h3>
+          <p>Savings, then Goals, then a new pot, then a standing order. The app has the data and can act, but you need to know the product names first and do the maths yourself.</p>
+          <span class="fail">You have to know which feature to open.</span>
+        </article>
+        <article class="card route">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></span>
+          <h3>Work it out on a spreadsheet</h3>
+          <p>€2,700 ÷ 7 months = €386. Dividing is easy. Knowing whether it fits is not: expenses come from memory, and they change every month.</p>
+          <span class="fail">Answers “how much do I need”, not “how much can I afford”.</span>
+        </article>
+        <article class="card route">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg></span>
+          <h3>Ask ChatGPT, Claude or Gemini</h3>
+          <p>A general assistant understands the request and reasons well. But it only sees what you paste in, guesses your spending, and can't act. You still leave the chat to set it up in your bank.</p>
+          <span class="fail">Doesn't know your money and can't act on it.</span>
+        </article>
+      </div>
+      <div class="tbl-wrap">
+        <table class="matrix">
+          <thead><tr><th>Route</th><th>Understands the request</th><th>Knows your money</th><th>Can act</th><th>You stay in control</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Bank app menus</td><td><span class="mk n">✕</span></td><td><span class="mk y">✓</span></td><td><span class="mk y">✓</span></td><td><span class="mk y">✓</span></td></tr>
+            <tr><td class="k">Spreadsheet</td><td><span class="mk n">✕</span></td><td><span class="mk n">✕</span></td><td><span class="mk n">✕</span></td><td><span class="mk y">✓</span></td></tr>
+            <tr><td class="k">General AI chat</td><td><span class="mk y">✓</span></td><td><span class="mk n">✕</span></td><td><span class="mk n">✕</span></td><td><span class="mk p">~</span></td></tr>
+            <tr class="us"><td class="k">An assistant inside the bank</td><td><span class="mk y">✓</span></td><td><span class="mk y">✓</span></td><td><span class="mk y">✓</span></td><td><span class="mk y">✓</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note"><span class="eyebrow">I tried the third route myself</span>The first version of Alex's budget was drafted in ChatGPT from typed-in figures. It didn't hold up: the month ended at <b>−€61</b>, the card bill went through a currency conversion, and “€94.89” sat next to “about €295”. Version 2 rebuilt the numbers from the bank's own transactions. <a href="#ai" data-go="ai">See the AI process</a>.</p>
+    </section>
+
+    <section class="sec" id="question">
+      <h2>The question behind the question</h2>
+      <p class="sub">Dividing the amount by the months answers one question. Alex is asking a different one.</p>
+      <div class="versus">
+        <div class="card"><span class="eyebrow dim">What a calculator answers</span><span class="q">“How much do I need to save?”</span><span class="calc">€3,000 − €300 = €2,700<br>€2,700 ÷ 7 = €386 / month</span></div>
+        <span class="vs">VS</span>
+        <div class="card pick"><span class="eyebrow">What Alex is asking</span><span class="q">“How much can I afford to save?”</span><span class="small muted">Needs income, real expenses, instalments that are about to end, and how much Alex wants to keep free each month.</span></div>
+      </div>
+      <p class="muted">The second question needs data only the bank has. That is where a bank's own assistant can do something a general chatbot can't.</p>
+    </section>
+
+    <section class="sec" id="design-question">
+      <h2>Design question</h2>
+      <blockquote class="pull">How can we help someone work out how much they can afford to save each month for a holiday, see what that means for their departure date, and approve a plan that fits their budget?<cite>From my challenge brief</cite></blockquote>
+      <div class="card"><span class="eyebrow">Value proposition</span><p style="margin-top:8px;color:var(--fg);font-size:17px">See how much you need to save for your holiday, how much that would leave you each month, and adjust the plan before you commit.</p></div>
+    </section>
+
+    <section class="sec" id="requirements">
+      <h2>What the experience has to show</h2>
+      <p class="sub">The brief lists five things. I used them as the acceptance test for every screen, and they became the five steps of the journey.</p>
+      <div class="req">
+        <div><span class="n">01</span><b>Express intent naturally</b>without knowing which banking feature to open</div>
+        <div><span class="n">02</span><b>Understand the numbers</b>through simple, meaningful visuals</div>
+        <div><span class="n">03</span><b>Explore and adjust</b>the AI's recommendation and its assumptions</div>
+        <div><span class="n">04</span><b>Review and approve</b>explicitly, knowing what will happen</div>
+        <div><span class="n">05</span><b>Move between chat and controls</b>without losing context</div>
+      </div>
+    </section>
+
+    <section class="sec" id="objectives">
+      <h2>Objectives</h2>
+      <div class="grid g3">
+        <article class="card stack"><span class="eyebrow">User</span><h3>Choose an amount Alex can live with</h3><p>Know the monthly deposit, what it means for August, and what stays free each month.</p><span class="meta"><b>Signal:</b> before confirming, Alex can explain the amount and the August total.</span></article>
+        <article class="card stack"><span class="eyebrow">Product</span><h3>From a sentence to a scheduled plan</h3><p>The request becomes a plan without opening a single menu, and approval is always explicit.</p><span class="meta"><b>Scope:</b> one core journey, 5 steps, 10 prototype screens.</span></article>
+        <article class="card stack"><span class="eyebrow">Business · proposed</span><h3>Savings plans that last</h3><p>The brief sets no targets. My proposal: more recurring plans that stay active, because people understood their impact on the month.</p><span class="meta"><b>Track:</b> plans still active after the third deposit, and why people pause.</span></article>
+      </div>
+    </section>
+    <nav class="pager" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 02 ALEX ================= -->
+<section class="page" id="alex" data-title="Alex">
+  <div class="col">
+    <header class="page-head">
+      <span class="tag">02 · Persona</span>
+      <h1>Alex, a traveller with a goal and a tight budget</h1>
+      <p class="lead">A proto-persona built from the brief, <b>not from research</b>. The numbers were chosen so that the central decision is a real trade-off: reach the goal, or keep the money Alex is used to having free.</p>
+    </header>
+    <div class="persona">
+      <article class="card persona-card">
+        <div class="who"><span class="ph"><img src="assets/alex.jpg" alt="Alex's profile photo in the app"></span><div><h3>Alex</h3><span class="role">Traveller with a goal and a tight budget</span></div></div>
+        <div class="kv">
+          <div>Income<b>€1,350 / month</b></div>
+          <div>Expenses today<b>€1,261 / month</b></div>
+          <div>Already saved<b>€300</b></div>
+          <div>Goal<b>€3,000 by end Aug 2027</b></div>
+        </div>
+        <div><span class="eyebrow dim">Needs</span><p class="small" style="margin-top:4px">Choose a viable monthly amount and understand what this choice means for the trip.</p></div>
+        <div><span class="eyebrow dim">Mindset</span><p class="small" style="margin-top:4px">Already knows what for, how much and when. Today about €90 is left over each month, and Alex wants to keep at least that free.</p></div>
+      </article>
+      <article class="card" id="budget">
+        <span class="eyebrow">Monthly budget · average Sep–Nov 2026</span>
+        <div class="tbl-wrap" style="margin-top:12px;border:0;background:none">
+          <table style="min-width:420px">
+            <thead><tr><th></th><th class="num">Today</th><th class="num">From Feb 2027</th></tr></thead>
+            <tbody class="tabular">
+              <tr><td>Income</td><td class="num">€1,350</td><td class="num">€1,350</td></tr>
+              <tr><td>Health</td><td class="num">€220</td><td class="num">€220</td></tr>
+              <tr><td>Internet &amp; mobile</td><td class="num">€24</td><td class="num">€24</td></tr>
+              <tr><td>Food</td><td class="num">€300</td><td class="num">€300</td></tr>
+              <tr><td>Fuel</td><td class="num">€150</td><td class="num">€150</td></tr>
+              <tr><td>Credit card bill</td><td class="num">€567</td><td class="num">€211</td></tr>
+              <tr class="total"><td>Estimated surplus</td><td class="num">about €90</td><td class="num">about €445</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="budget-bars" style="margin-top:14px">
+          <div class="bb"><div class="top"><span>Today</span><b>about €90 free</b></div><div class="track"><span class="exp" style="width:93.4%">Expenses €1,261</span><span class="sur" style="width:6.6%"></span></div></div>
+          <div class="bb"><div class="top"><span>From February</span><b>about €445 free</b></div><div class="track"><span class="exp" style="width:67%">Expenses €905</span><span class="sur" style="width:33%">Surplus €445</span></div></div>
+        </div>
+        <p class="small muted" style="margin-top:12px">Two instalment purchases end in January and cut the card bill by €356 a month. That is why the plan starts in February.</p>
+      </article>
+    </div>
+
+    <section class="sec" id="profile">
+      <h2>What drives Alex</h2>
+      <div class="stickies">
+        <div class="card sticky"><h4><i style="background:#ffaaa0"></i>Behaviours</h4><ul class="clean"><li>Pays for larger purchases in instalments on the card</li><li>Has €300 saved, no automatic deposit</li><li>Doesn't track how much is left over each month</li></ul></div>
+        <div class="card sticky"><h4><i style="background:#86e0a2"></i>What influences the decision</h4><ul class="clean"><li>Travel date: end of August 2027</li><li>Instalments that finish in January</li><li>Wants to keep about €90 free each month</li></ul></div>
+        <div class="card sticky"><h4><i style="background:#72d6f0"></i>Goals</h4><ul class="clean"><li>Save €3,000 by the end of August</li><li>Choose a feasible monthly amount</li><li>Know how much there'll be by the travel date</li></ul></div>
+        <div class="card sticky"><h4><i style="background:#ffc670"></i>Needs and expectations</h4><ul class="clean"><li>Know how much can be saved without tightening the budget</li><li>Understand where the AI's recommendation comes from</li><li>Be able to correct and adjust before authorising</li></ul></div>
+        <div class="card sticky"><h4><i style="background:#d9b8ff"></i>Motivations</h4><ul class="clean"><li>To travel next summer</li><li>To pay for the trip without using credit</li><li>To feel the plan fits within the month</li></ul></div>
+        <div class="card sticky"><h4><i style="background:#ffd966"></i>Pains and frustrations</h4><ul class="clean"><li>Doesn't know how much can be saved each month</li><li>Expenses vary, so the surplus is hard to estimate</li><li>The required amount feels high, and it's unclear how much would be missing by saving less</li></ul></div>
+      </div>
+      <p class="small muted">Sources: Wit challenge statement, my challenge brief, content prototype v2. No user research: behaviours and motivations are hypotheses to validate.</p>
+    </section>
+    <nav class="pager" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 03 JOURNEY ================= -->
+<section class="page" id="journey" data-title="Journey">
+  <div class="wide">
+    <header class="page-head col" style="margin-left:0">
+      <span class="tag">03 · Journey</span>
+      <h1>Five steps from a sentence to a scheduled plan</h1>
+      <p class="lead">Each step answers one of Alex's questions and one of the five things the challenge asks for. <b>Hover a step</b> to see the journey map behind it. Move the mouse sideways to travel along the path.</p>
+    </header>
+    <section class="sec" id="path" style="margin-top:0">
+      <h2 class="sr" style="position:absolute;left:-9999px">The path</h2>
+      <div class="journey-wrap" id="jWrap"><div class="journey-track" id="jTrack"></div></div>
+      <div class="journey-hint"><span>← move the mouse to travel · hover for detail →</span></div>
+    </section>
+    <section class="sec" id="step-detail">
+      <div class="jhead"><span class="eyebrow" id="jStageLbl"></span><h3 id="jStageTitle"></h3></div>
+      <div class="jdetail" id="jDetail"></div>
+    </section>
+    <section class="sec" id="decision">
+      <h2>The central decision</h2>
+      <p class="sub">Step 3 is where the plan becomes Alex's own. The AI suggests the amount that reaches the goal; Alex pushes back to protect the buffer. Both consequences stay on screen.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Monthly deposit</th><th class="num">Free each month</th><th class="num">By August, with the €300</th><th>What the screen says</th></tr></thead>
+        <tbody class="tabular">
+          <tr><td class="k">€350</td><td class="num">about €95</td><td class="num">€2,750</td><td><span class="pill good">€250 to go · keeps today's buffer</span></td></tr>
+          <tr><td class="k">€370</td><td class="num">about €75</td><td class="num">€2,890</td><td><span class="pill warn">€110 to go · below the €90 you chose</span></td></tr>
+          <tr><td class="k">€386</td><td class="num">about €59</td><td class="num">€3,000</td><td><span class="pill warn">Goal reached · below the €90 you chose</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><b>The warning informs, it doesn't block.</b> Alex can still review the €386 plan. Typing “What if it were €370?” moves the same slider, so conversation and controls never disagree.</p>
+    </section>
+    <nav class="pager col" style="margin-left:0" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 04 SOLUTIONS ================= -->
+<section class="page" id="solutions" data-title="Exploring solutions">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">04 · Exploring solutions</span>
+      <h1>Three ideas, scored before a single screen was drawn</h1>
+      <p class="lead">Before writing any dialogue I compared three answers to Alex's request: concept cards, a decision matrix against the brief, and value against effort. Then three layouts for the winner, critiqued screen by screen.</p>
+    </header>
+
+    <section class="sec" id="concepts" style="margin-top:0">
+      <h2>Round 1 · What should the assistant do?</h2>
+      <div class="grid g3">
+        <article class="card concept">
+          <span class="eyebrow dim">Path 1 · basic premise</span><h3>Manual piggy bank with AI help</h3>
+          <p>Alex sets the goal and deadline; the AI creates a pot and schedules deposits. Answers “how can I save?”, not “how much can I?”.</p>
+          <div class="score"><div class="r v"><span>User value</span><span class="t"><i style="width:30%"></i></span><b>3/10</b></div><div class="r e"><span>Effort</span><span class="t"><i style="width:20%"></i></span><b>2/10</b></div></div>
+          <p class="small">It's what banks already offer. Alex still has to plan the amount alone.</p>
+        </article>
+        <article class="card concept">
+          <span class="eyebrow dim">Path 2 · proposed MVP</span><h3>Guided simulator</h3>
+          <p>Alex describes the goal; the AI calculates the amount and asks how much is usually left over. A simulator shows what's free and what's missing.</p>
+          <div class="score"><div class="r v"><span>User value</span><span class="t"><i style="width:60%"></i></span><b>6/10</b></div><div class="r e"><span>Effort</span><span class="t"><i style="width:50%"></i></span><b>5/10</b></div></div>
+          <p class="small">Depends on Alex's own estimate, which is one of the pains in the brief. For Alex it gives a pessimistic plan (€1,110), blind to February.</p>
+        </article>
+        <article class="card concept win">
+          <span class="eyebrow" style="color:var(--good)">Path 3 · prototyped</span><h3>Planning with financial context</h3>
+          <p>The AI reads income and expenses, estimates the surplus, and suggests flexible deposits that Alex adjusts before approving.</p>
+          <div class="score"><div class="r v"><span>User value</span><span class="t"><i style="width:90%"></i></span><b>9/10</b></div><div class="r e"><span>Effort</span><span class="t"><i style="width:80%"></i></span><b>8/10</b></div></div>
+          <p class="small">Answers the real question with the bank's data. Not a 10: it depends on the estimate being right and on Alex accepting the expense reading.</p>
+        </article>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Brief requirement</th><th>1 · Piggy bank</th><th>2 · Simulator</th><th>3 · Financial context</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Express intent without knowing the feature</td><td class="no">Doesn't meet</td><td class="yes">Meets</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Understand the numbers with simple visuals</td><td class="no">Doesn't meet</td><td class="part">Partly: only the amount Alex reports</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Explore and adjust the recommendation</td><td class="no">No recommendation</td><td class="yes">Meets</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Review and approve clearly</td><td class="yes">Meets</td><td class="yes">Meets</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Chat and controls, keeping context</td><td class="no">Only controls</td><td class="yes">Meets</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Answers “how much can I save?”</td><td class="no">Doesn't meet</td><td class="no">Depends on Alex knowing</td><td class="yes">Meets</td></tr>
+          <tr><td class="k">Simplicity</td><td class="yes">Simpler</td><td>Intermediate</td><td class="part">More steps, depends on data</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note"><span class="eyebrow">Decision</span><b>Prototype path 3</b>: the only one that meets all five requirements and answers “how much can I save?” with the bank's data. <b>Path 2 is the proposed MVP</b>: same screens, effort 5 instead of 8, and it grows into path 3 by swapping the reported surplus for the estimated one. From path 1, the familiar amount · frequency · schedule pattern stays in the review screen.</p>
+    </section>
+
+    <section class="sec" id="layouts">
+      <h2>Round 2 · How should it be laid out?</h2>
+      <p class="sub">Three low-fidelity versions of path 3, each annotated with UX principles and a “what could go wrong” list. Click to enlarge.</p>
+      <div class="wfs">
+        <article class="card wf">
+          <button class="img" type="button" data-zoom="assets/figma/wf-a.jpg" data-cap="Version A · Full-screen conversation"><img src="assets/figma/wf-a.jpg" alt="Wireframes of version A, full-screen conversation" loading="lazy"></button>
+          <h3>A · Full-screen conversation</h3><p>A fixed field on the home screen. The person leads; the AI asks before proposing.</p>
+          <p class="small"><b style="color:var(--fg)">Risk:</b> slow and tedious, about 4 typed messages and 6 taps. Controls disappear into the history.</p>
+          <div class="tally"><span class="muted">Requirements met well</span><span>2 / 5</span></div>
+        </article>
+        <article class="card wf win">
+          <button class="img" type="button" data-zoom="assets/figma/wf-b.jpg" data-cap="Version B · Interactive side sheet"><img src="assets/figma/wf-b.jpg" alt="Wireframes of version B, interactive side sheet" loading="lazy"></button>
+          <h3>B · Interactive side sheet <span class="pill good" style="vertical-align:middle">chosen</span></h3><p>Floating button, taps and graphics. Answers that are interface, not just text. One message and about 8 taps.</p>
+          <p class="small"><b style="color:var(--fg)">Risk:</b> an overloaded plan card, and accepting the €350 default without thinking.</p>
+          <div class="tally"><span class="muted">Requirements met well</span><span style="color:var(--good)">4 / 5</span></div>
+        </article>
+        <article class="card wf">
+          <button class="img" type="button" data-zoom="assets/figma/wf-c.jpg" data-cap="Version C · Intent that builds the screen"><img src="assets/figma/wf-c.jpg" alt="Wireframes of version C, intent that builds the screen" loading="lazy"></button>
+          <h3>C · Intent that builds the screen</h3><p>An intent field, no conversation. The AI fills a familiar form.</p>
+          <p class="small"><b style="color:var(--fg)">Risk:</b> misreading the request with no way to talk back. The AI can go unnoticed.</p>
+          <div class="tally"><span class="muted">Requirements met well</span><span>2 / 5</span></div>
+        </article>
+      </div>
+      <p class="small muted">This was a critical reading of the wireframes done with AI, not a test with people. It guided the choice and still needs validation.</p>
+    </section>
+
+    <section class="sec" id="tradeoffs">
+      <h2>Trade-offs I accepted</h2>
+      <div class="grid g3">
+        <div class="card stack"><span class="eyebrow">Complexity for relevance</span><p>Path 3 has more steps and needs data access. I kept it because it's the only one that answers Alex's actual question, and proposed path 2 as the cheaper first release.</p></div>
+        <div class="card stack"><span class="eyebrow">A default, with friction</span><p>Version B suggests €350, which risks automatic acceptance. The answer: show what stays free next to every amount, and warn below the chosen buffer without blocking.</p></div>
+        <div class="card stack"><span class="eyebrow">Consent at the point of use</span><p>Instead of switches turned on by default, a permission sheet asks before reading the account, names what's read (account, card, 3 months), and lets Alex type the numbers instead.</p></div>
+      </div>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 05 PROTOTYPE ================= -->
+<section class="page" id="prototype" data-title="Prototype">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">05 · Prototype</span>
+      <h1>Try the core journey</h1>
+      <p class="lead">The prototype runs right here. <b>Tap through the phone</b> or jump to a step from the list on its left. It follows Alex from the home screen to a scheduled plan, and back to the new pot.</p>
+    </header>
+    <div class="proto-frame">
+      <div class="proto-bar"><span class="dots3"><i></i><i></i><i></i></span><span>Summer holiday · AI savings plan</span><span class="sp"></span><span>Click the prototype, then <kbd>←</kbd> <kbd>→</kbd> step · <kbd>R</kbd> restart</span></div>
+      <iframe id="protoFrame" title="Interactive prototype of the savings plan journey" data-src="prototipo/index.html" loading="lazy"></iframe>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><a class="btn ghost" href="https://github.com/cacmpss/wit-prototipo/tree/prototipo-interativo/prototipo" target="_blank" rel="noopener">Prototype code on GitHub ↗</a><a class="btn ghost" href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=2-14306" target="_blank" rel="noopener">Flow in Figma ↗</a></div>
+    <section class="sec" id="steps" style="max-width:900px">
+      <h2>What to look for</h2>
+      <div class="steps10">
+        <div><span class="n">01</span><span><b>Home.</b> The assistant button sits on the account screen, no menu needed.</span></div>
+        <div><span class="n">02</span><span><b>Assistant opens.</b> Starter actions for people who don't know what to ask.</span></div>
+        <div><span class="n">03</span><span><b>Goal.</b> The request becomes a correctable summary in a sheet.</span></div>
+        <div><span class="n">04</span><span><b>Data permission.</b> What's read, for how long, and a way to say no.</span></div>
+        <div><span class="n">05</span><span><b>Monthly surplus.</b> A month slider shows today versus February.</span></div>
+        <div class="key"><span class="n">06</span><span><b>Interactive plan.</b> The state change: drag from €386 to €350 and the warning turns into “keeps today's buffer”.</span></div>
+        <div><span class="n">07</span><span><b>Review.</b> “Nothing leaves your account today”, before Face ID.</span></div>
+        <div><span class="n">08</span><span><b>Plan scheduled.</b> First deposit on 5 Feb, a check-in planned for January.</span></div>
+        <div><span class="n">09</span><span><b>Pot detail.</b> Pause, change day, or ask how to close the €250 gap.</span></div>
+        <div><span class="n">10</span><span><b>Home with the new pot.</b> The plan lives where Alex already looks.</span></div>
+      </div>
+      <p class="small muted">Reduce Motion is respected, from the OS setting or the toggle in the panel. On a phone the prototype fills the screen and the step list is hidden.</p>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 06 DESIGN & FLOW ================= -->
+<section class="page" id="flow" data-title="Design & flow">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">06 · Design &amp; flow</span>
+      <h1>23 screens, one conversation</h1>
+      <p class="lead">Home, assistant, plan, pot: the flow never sends Alex to a menu. Structured input happens in sheets and cards inside the chat, so the context of the conversation is always one scroll away. Click any screen to enlarge it.</p>
+    </header>
+    <div id="gallery"></div>
+
+    <section class="sec" id="motion" style="max-width:900px">
+      <h2>Motion foundations</h2>
+      <p class="sub">Motion is a token set, annotated in Figma and implemented in the prototype. It explains cause and effect: when an amount changes, the chart and the numbers move together. Hover a row to play it.</p>
+      <div class="mt" id="motionTokens"></div>
+      <ul class="clean small">
+        <li><b>Sheets enter with a spring</b> and leave on the exit curve, so opening feels responsive and closing gets out of the way.</li>
+        <li><b>Data moves at 600 ms</b>, slow enough to follow the line of the chart from €2,750 to €3,000.</li>
+        <li><b>Reduce Motion</b> swaps movement for fades and keeps every state change visible.</li>
+      </ul>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 07 DESIGN SYSTEM ================= -->
+<section class="page" id="system" data-title="Design system">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">07 · Design system</span>
+      <h1>A small library built on Astryx</h1>
+      <p class="lead">Screens are assembled from components, not drawn. <b>Astryx</b> supplies the foundations and base components; a local library covers what conversational banking needs. Custom pieces were allowed only where Astryx had no equivalent.</p>
+    </header>
+
+    <section class="sec" id="in-motion" style="margin-top:0">
+      <iframe class="showcase-frame" id="showcaseFrame" src="showcase.html" title="Components in motion: live components from the prototype"></iframe>
+    </section>
+
+    <section class="sec" id="foundations">
+      <h2>Foundations</h2>
+      <p class="sub">Colours are published as Figma variables. Spacing, radius and type are bound to tokens, never typed in.</p>
+      <div class="swatches" id="swatches"></div>
+      <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+        <div class="card stack"><span class="eyebrow">Radius · subtly square</span>
+          <div class="radii"><div><i style="border-radius:6px 0 0 0"></i>6 · inner</div><div><i style="border-radius:10px 0 0 0"></i>10 · element</div><div><i style="border-radius:12px 0 0 0"></i>12 · container</div><div><i style="border-radius:28px 0 0 0"></i>28 · page</div><div><i style="border-radius:34px 0 0 0"></i>34 · sheet</div></div>
+        </div>
+        <div class="card stack"><span class="eyebrow">Type</span>
+          <div class="type-spec">
+            <div class="r"><span>Heading 1 · Figtree SemiBold 24/32</span><span style="font:600 24px/32px Figtree, var(--font);color:var(--fg)">€2,750 by August</span></div>
+            <div class="r"><span>Heading 2 · Figtree SemiBold 20/28</span><span style="font:600 20px/28px Figtree, var(--font);color:var(--fg)">Summer holiday</span></div>
+            <div class="r"><span>Label · Figtree Medium 14/20</span><span style="font:500 14px/20px Figtree, var(--font);color:var(--fg)">Monthly deposit</span></div>
+            <div class="r"><span>Body · Figtree Regular 14/20</span><span style="font:400 14px/20px Figtree, var(--font);color:var(--fg)">From a surplus of about €445 a month</span></div>
+            <div class="r"><span>Supporting · Figtree Regular 12/20</span><span style="font:400 12px/20px Figtree, var(--font);color:var(--muted)">7 deposits, every 5th, Feb to Aug 2027</span></div>
+            <p class="small muted">One family across every text style. Inter appears only in the iOS status bar (9:41), as part of the device frame.</p>
+            <div class="r" style="border:0;padding:0"><span>Spacing</span><span class="muted small">4 px base · 16 px margins and gaps (Spacing/4)</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="components">
+      <h2>Components</h2>
+      <div class="comp-groups">
+        <div class="card"><span class="eyebrow">Conversation</span><ul><li>AI State Indicator</li><li>AI Chat Header</li><li>Message AI</li><li>Message Human</li><li>Quick replies</li><li>Starter actions</li><li>Contextual actions</li><li>Review</li><li>FAB action</li></ul></div>
+        <div class="card"><span class="eyebrow">Banking app</span><ul><li>Home header</li><li>Account overview</li><li>Home feed</li><li>Pots</li><li>Bottom navigation</li></ul></div>
+        <div class="card"><span class="eyebrow">Plan cards</span><ul><li>Card · Plan summary</li><li>Card · Plan controls</li><li>Card · Suggestion</li><li>Card · Deposit day</li><li>Banner · Warning</li><li>Badge · Success</li></ul></div>
+      </div>
+      <p class="sub" style="margin-top:6px">Each component page documents overview, anatomy, elements bound to Astryx, behaviour and states, usage and accessibility, and the reusable variants.</p>
+      <div class="sheet-imgs">
+        <figure style="margin:0"><button type="button" data-zoom="assets/figma/lib-msgai.png" data-cap="Message AI · component documentation"><img src="assets/figma/lib-msgai.png" alt="Message AI component page" loading="lazy"></button><figcaption>Message AI</figcaption></figure>
+        <figure style="margin:0"><button type="button" data-zoom="assets/figma/lib-review.png" data-cap="Review · make the consequence clear before the commitment"><img src="assets/figma/lib-review.png" alt="Review component page" loading="lazy"></button><figcaption>Review</figcaption></figure>
+        <figure style="margin:0"><button type="button" data-zoom="assets/figma/lib-pots.png" data-cap="Pots · components for the Pots page and pot detail"><img src="assets/figma/lib-pots.png" alt="Pots component page" loading="lazy"></button><figcaption>Pots</figcaption></figure>
+        <figure style="margin:0"><button type="button" data-zoom="assets/figma/lib-chat.png" data-cap="Chat · assembled conversation states"><img src="assets/figma/lib-chat.png" alt="Chat component page" loading="lazy"></button><figcaption>Chat</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="sec" id="rules">
+      <h2>Rules I held the AI to</h2>
+      <div class="grid g2">
+        <div class="card stack"><span class="eyebrow">Tokens first</span><p>Spacing hard-coded instead of bound to tokens was flagged twice and fixed. Leftover tokens from a reference library were removed.</p></div>
+        <div class="card stack"><span class="eyebrow">Astryx before custom</span><p>A rule, not a suggestion: local components only where the library had no equivalent, and composed from Astryx instances.</p></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn ghost" href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=0-1" target="_blank" rel="noopener">Open the Design Library in Figma ↗</a><a class="btn ghost" href="https://github.com/cacmpss/pot-detail-handoff/blob/main/src/styles/tokens.css" target="_blank" rel="noopener">Tokens and components on GitHub ↗</a></div>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 08 AI PROCESS ================= -->
+<section class="page" id="ai" data-title="AI process">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">08 · AI process</span>
+      <h1>AI drafted. I decided what stayed.</h1>
+      <p class="lead">AI sped up the drafting. I owned the framing, the constraints and the quality bar. Every deliverable went through the same loop, and none of the tools was trusted to judge its own output.</p>
+    </header>
+    <div class="stats">
+      <div class="stat"><b>5</b><span>brief requirements used as the acceptance test for every screen</span></div>
+      <div class="stat"><b>3</b><span>solution directions compared, with arguments for and against</span></div>
+      <div class="stat"><b>2</b><span>versions of the content prototype, after a critical review</span></div>
+      <div class="stat"><b>1</b><span>day, from brief to handoff</span></div>
+    </div>
+
+    <section class="sec" id="tools">
+      <h2>Tools, what they produced, what I sent back</h2>
+      <div class="grid g3">
+        <article class="card tool"><span class="pill accent role">Reasoning &amp; building</span><h3>Claude Code · Sonnet, Opus, Fable</h3>
+          <dl><div><dt>Produced</dt><dd>The brief, the journey map, the solution framework, content prototype v2, screens in Figma through the MCP, the interactive prototype and the handoff code.</dd></div>
+          <div><dt>What I sent back</dt><dd>Rationales only argued for the design, so I asked for arguments against on every screen, plus a comparison table against the brief.</dd></div></dl></article>
+        <article class="card tool"><span class="pill good role">Execution</span><h3>Figma MCP + Astryx</h3>
+          <dl><div><dt>Produced</dt><dd>Wireframes, high-fidelity screens, component documentation and a variable audit, built in the file with Astryx components.</dd></div>
+          <div><dt>What I sent back</dt><dd>Hard-coded spacing, a lost glass effect, and screens with no continuity with the previous step.</dd></div></dl></article>
+        <article class="card tool"><span class="pill warn role">Images</span><h3>Codex</h3>
+          <dl><div><dt>Produced</dt><dd>The 3D image set: the assistant mark, pot icons, the piggy bank and the travel icons.</dd></div>
+          <div><dt>What I sent back</dt><dd>Kept one material language across the set and exported sizes the screens actually use (36, 44, 56, 144 px).</dd></div></dl></article>
+        <article class="card tool"><span class="pill neutral role">First draft</span><h3>ChatGPT</h3>
+          <dl><div><dt>Produced</dt><dd>Version 1 of Alex's monthly budget, assumptions and projections, from typed-in figures.</dd></div>
+          <div><dt>What I sent back</dt><dd>Rejected the numbers: a negative month, a fragile currency conversion, inconsistent rounding. Rebuilt in v2.</dd></div></dl></article>
+        <article class="card tool"><span class="pill bad role">Evidence</span><h3>Real-product references</h3>
+          <dl><div><dt>Produced</dt><dd>I navigated Brazilian banking apps, such as Mercado Pago, to understand how their AI agents behave.</dd></div>
+          <div><dt>What I sent back</dt><dd>I analysed the recordings first, then asked the AI to adapt the pattern with Astryx components rather than copy a screen.</dd></div></dl></article>
+        <article class="card tool"><span class="pill accent role">Constraint</span><h3>Astryx design system</h3>
+          <dl><div><dt>Produced</dt><dd>Components, spacing, radius and type styles.</dd></div>
+          <div><dt>What I sent back</dt><dd>Audited tokens after every build. Radius had to feel subtly square, and leftover tokens were removed.</dd></div></dl></article>
+      </div>
+    </section>
+
+    <section class="sec" id="loop">
+      <h2>A loop, not a single prompt</h2>
+      <div class="card loop">
+        <div><span class="n">01</span><b>Frame</b><span>I wrote the persona, the numbers and the scenario, then asked the AI to review them against the brief.</span></div>
+        <div><span class="n">02</span><b>Diverge</b><span>Alternatives first, then a middle option balancing simplicity and AI help, as a possible MVP.</span></div>
+        <div><span class="n">03</span><b>Challenge</b><span>Arguments against each direction, user value and effort scored 1–10, with a reason for each score.</span></div>
+        <div><span class="n">04</span><b>Build</b><span>Low-fi wireframes became high-fidelity screens in Figma, from Astryx and the local library.</span></div>
+        <div><span class="n">05</span><b>Audit</b><span>Tokens, wording, continuity between screens and the arithmetic. What failed went back.</span></div>
+      </div>
+    </section>
+
+    <section class="sec" id="judgement">
+      <h2>Where my judgement changed the outcome</h2>
+      <div class="grid g2">
+        <article class="card moment"><span class="pill accent" style="justify-self:start">Method</span><h3>The journey map wasn't a journey map</h3>
+          <div class="steps"><div><span>AI proposed</span>A simplified list of steps and screens.</div><div><span>I challenged</span>“It lacks actions, goals, doubts, pains and opportunities.”</div><div class="res"><span>Result</span>Rebuilt on the full template, pains mapped to the brief's hypotheses, with risks to avoid.</div></div></article>
+        <article class="card moment"><span class="pill accent" style="justify-self:start">Framing</span><h3>Exploration mistaken for a script</h3>
+          <div class="steps"><div><span>AI proposed</span>Three conversation branches, presented as the solution exploration.</div><div><span>I challenged</span>“These are paths inside one solution.” I defined the simple and complete directions and asked for an MVP between them.</div><div class="res"><span>Result</span>Three directions with hypothesis, gains, risks, value and effort.</div></div></article>
+        <article class="card moment" style="grid-column:1 / -1"><span class="pill good" style="justify-self:start">System</span><h3>Design-system drift after every fix</h3>
+          <div class="steps"><div><span>AI proposed</span>Hard-coded paddings, a very round radius, the glass effect lost during a fix.</div><div><span>I challenged</span>“Paddings aren't using tokens.” “I want a subtle square radius.” “Keep the glass.”</div><div class="res"><span>Result</span>Spacing, radius and type bound to tokens; colours published as variables.</div></div></article>
+      </div>
+    </section>
+
+    <section class="sec" id="quality">
+      <h2>How I judged quality</h2>
+      <div class="grid g3">
+        <div class="card stack"><span class="eyebrow">Fit to the brief</span><p>Every screen traced back to the five requirements.</p></div>
+        <div class="card stack"><span class="eyebrow">Numerical honesty</span><p>I recomputed the arithmetic myself. A plan that can't reach the goal fails.</p></div>
+        <div class="card stack"><span class="eyebrow">Trust and control</span><p>Review states what happens today, when money moves, how to change or pause.</p></div>
+        <div class="card stack"><span class="eyebrow">Conversational continuity</span><p>Each AI turn uses what Alex already said, including answers given in sheets.</p></div>
+        <div class="card stack"><span class="eyebrow">System fidelity</span><p>Tokens and Astryx first. Custom only where the library has no equivalent.</p></div>
+        <div class="card stack"><span class="eyebrow">Evidence over taste</span><p>Patterns come from real products and benchmarks, not from what looked good in the moment.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" id="codex">
+      <h2>Images generated with Codex</h2>
+      <div class="codex">
+        <figure><img src="assets/codex/verde-alta-resolucao.png" alt="" loading="lazy"><figcaption>assistant mark</figcaption></figure>
+        <figure><img src="assets/codex/aviao.png" alt="" loading="lazy"><figcaption>summer holiday</figcaption></figure>
+        <figure><img src="assets/codex/cofrinho.png" alt="" loading="lazy"><figcaption>piggy bank</figcaption></figure>
+        <figure><img src="assets/codex/meta.png" alt="" loading="lazy"><figcaption>plan a goal</figcaption></figure>
+        <figure><img src="assets/codex/comparacao.png" alt="" loading="lazy"><figcaption>spending</figcaption></figure>
+        <figure><img src="assets/codex/ano-chapeu.png" alt="" loading="lazy"><figcaption>new year fund</figcaption></figure>
+        <figure><img src="assets/codex/ano-tacas.png" alt="" loading="lazy"><figcaption>celebration</figcaption></figure>
+        <figure><img src="assets/codex/emergencia-boia.png" alt="" loading="lazy"><figcaption>emergency pot</figcaption></figure>
+        <figure><img src="assets/codex/gizmo-frontal.png" alt="" loading="lazy"><figcaption>Gizmo treatment</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="sec" id="split">
+      <h2>What AI accelerated, and what stayed with me</h2>
+      <div class="grid g2">
+        <div class="card"><span class="eyebrow">AI accelerated</span><ul class="clean" style="margin-top:10px"><li>First drafts of journeys, dialogues and design rationales</li><li>Reviewing my documents against the brief and finding gaps</li><li>Building and rebuilding screens in Figma with Astryx components</li><li>Turning the Figma flow into a coded prototype and a React handoff</li></ul></div>
+        <div class="card"><span class="eyebrow">Stayed with me</span><ul class="clean" style="margin-top:10px"><li>The problem framing, the persona and the numbers</li><li>Deciding which direction to pursue, and why</li><li>Spotting continuity, trust and token problems in the output</li><li>Choosing when an AI pattern fits a banking context and when it doesn't</li></ul></div>
+      </div>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 09 HANDOFF ================= -->
+<section class="page" id="handoff" data-title="Handoff">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">09 · Handoff</span>
+      <h1>Pot detail, from Figma component to React</h1>
+      <p class="lead">The screen Alex lands on after scheduling the plan. It answers <b>how much is in the pot</b>, <b>how the plan gets there</b> and <b>what to do about the gap</b>, and it's the way back into the conversation. It is built only from design-system components, each mapped to code with Figma Code Connect.</p>
+    </header>
+    <div class="split" style="align-items:start">
+      <button class="handoff-img" type="button" data-zoom="assets/figma/handoff-spec.jpg" data-cap="Pot detail · handoff spec in Figma"><img src="assets/figma/handoff-spec.jpg" alt="Pot detail handoff spec page in Figma" loading="lazy"></button>
+      <div class="stack">
+        <div class="facts" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+          <div><span class="k">Code</span><span class="v">React + TypeScript</span></div>
+          <div><span class="k">Templates</span><span class="v">11 Code Connect files</span></div>
+        </div>
+        <ul class="clean">
+          <li><b>Values that drive logic become numbers.</b> Figma holds “€300.00”; code receives 300 and formats it, so the bar and its legend can never disagree.</li>
+          <li><b>Interaction states are not props.</b> Hover, pressed and focused are CSS; only disabled and loading become props.</li>
+          <li><b>Nested instances become slots.</b> Status, progress and actions render through their own templates.</li>
+        </ul>
+        <a class="btn" style="align-self:flex-start" href="https://github.com/cacmpss/pot-detail-handoff" target="_blank" rel="noopener">View the code on GitHub ↗</a>
+      </div>
+    </div>
+
+    <section class="sec" id="anatomy">
+      <h2>Anatomy</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>#</th><th>Block</th><th>Figma component</th><th>Code</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td class="k">Back and help</td><td>Pots / Top bar</td><td class="mono">TopBar</td></tr>
+          <tr><td class="mono">2</td><td class="k">Pot name and goal</td><td>Pots / Pot hero</td><td class="mono">PotHero</td></tr>
+          <tr><td class="mono">3</td><td class="k">Balance, status, progress</td><td>Pots / Pot balance › Badge, Goal progress</td><td class="mono">PotBalance, Badge, GoalProgress</td></tr>
+          <tr><td class="mono">4</td><td class="k">Deposit · Withdraw · Modify</td><td>Pots / Action row › 3× Action tile</td><td class="mono">ActionRow, ActionTile</td></tr>
+          <tr><td class="mono">5</td><td class="k">Gap to goal + assistant entry</td><td>Pots / AI goal CTA › Button</td><td class="mono">AiGoalCta, Button</td></tr>
+          <tr><td class="mono">6</td><td class="k">How the plan runs</td><td>Pots / Schedule card</td><td class="mono">ScheduleCard</td></tr>
+          <tr><td class="mono">7</td><td class="k">Activity header</td><td>Pots / List header</td><td class="mono">ListHeader</td></tr>
+          <tr><td class="mono">8</td><td class="k">Activity rows</td><td>Home / Transaction row</td><td class="mono">TransactionRow</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="sec" id="code-connect">
+      <h2>Code Connect example · Goal progress</h2>
+      <p class="sub">Figma exposes three display strings. The template turns them into numbers; the component derives labels and bar widths from the same values.</p>
+      <div class="split">
+<pre class="code"><span class="c">// GoalProgress.figma.ts · Figma node 165:5180</span>
+<span class="k">const</span> toNumber = (t) =&gt; Number(t.replace(<span class="s">/[^\d.]/g</span>, <span class="s">''</span>))
+<span class="k">const</span> saved     = toNumber(instance.getString(<span class="s">'Saved'</span>))
+<span class="k">const</span> scheduled = toNumber(instance.getString(<span class="s">'Scheduled'</span>))
+<span class="k">const</span> toGo      = toNumber(instance.getString(<span class="s">'To go'</span>))
+
+<span class="k">export default</span> {
+  example: figma.code<span class="s">`&lt;GoalProgress
+    saved={${saved}} scheduled={${scheduled}}
+    goal={${saved + scheduled + toGo}} /&gt;`</span>,
+  id: <span class="s">'pots-goal-progress'</span>,
+}</pre>
+<pre class="code"><span class="c">// Rendered for Alex's pot</span>
+&lt;<span class="k">GoalProgress</span>
+  saved={<span class="s">300</span>}
+  scheduled={<span class="s">2450</span>}
+  goal={<span class="s">3000</span>}
+/&gt;
+
+<span class="c">// to go = max(goal − saved − scheduled, 0) = €250</span>
+<span class="c">// aria-label: "€300 saved, €2,450 scheduled,</span>
+<span class="c">//              €250 to go of €3,000"</span></pre>
+      </div>
+    </section>
+
+    <section class="sec" id="states">
+      <h2>States and rules</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>State</th><th>What changes</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Plan scheduled</td><td>Success badge “Scheduled · €350 · 5 Feb”; schedule card visible.</td></tr>
+          <tr><td class="k">Next deposit tomorrow</td><td>An info banner appears under the balance.</td></tr>
+          <tr><td class="k">Plan paused</td><td>Warning badge “Paused”; the schedule card offers Resume plan.</td></tr>
+          <tr><td class="k">Goal reached</td><td>The AI goal card hides; the progress bar is full.</td></tr>
+          <tr><td class="k">Balance €0</td><td>Withdraw is disabled (proposed rule).</td></tr>
+          <tr><td class="k">Loading · error</td><td>Skeletons for amount, progress and activity; inline error with Try again.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= 10 NEXT ================= -->
+<section class="page" id="next" data-title="Next steps">
+  <div class="col">
+    <header class="page-head">
+      <span class="tag">10 · Next steps</span>
+      <h1>What I'd test, and what I'd change next</h1>
+      <p class="lead">Nothing here has been tested with people yet. The prototype comes with a moderated test script built around one question, asked <b>before</b> the person confirms.</p>
+    </header>
+    <blockquote class="pull">“How much will you have for the trip in August, how much is left free each month, and what happens today if you confirm?”<cite>The question that decides whether the prototype worked</cite></blockquote>
+
+    <section class="sec" id="success">
+      <h2>What success looks like</h2>
+      <div class="grid g3">
+        <div class="card stack"><span class="eyebrow">Projection</span><h3 class="tabular">€2,750 by August</h3><p>or the total for the amount they chose.</p></div>
+        <div class="card stack"><span class="eyebrow">Free each month</span><h3 class="tabular">About €95</h3><p>or the free amount for their choice.</p></div>
+        <div class="card stack"><span class="eyebrow">The action</span><h3>Nothing leaves today</h3><p>The first deposit is on 5 February.</p></div>
+      </div>
+      <ul class="clean">
+        <li><b>Conscious decision:</b> explains €350 or €386 in terms of the goal or the buffer.</li>
+        <li><b>Control:</b> knows where to pause or change the plan later.</li>
+        <li><b>One main task:</b> “Plan your €3,000 holiday”, from the home screen to a scheduled plan, thinking aloud in a 20–25 minute moderated session. The task is there to watch behaviour, not to score steps.</li>
+      </ul>
+      <div class="grid g3">
+        <div class="card stack"><span class="eyebrow">Guided or in control?</span><p>Does the person like the assistant leading the way, or would they rather set the numbers themselves and use the AI only to check?</p></div>
+        <div class="card stack"><span class="eyebrow">Privacy</span><p>Does letting the AI read the account feel helpful or exposing? What would make it feel safe: the scope, the time limit, typing the numbers instead?</p></div>
+        <div class="card stack"><span class="eyebrow">Behaviour</span><p>Where do they hesitate, go back or stop trusting the numbers? Do they move the slider, type in the chat, or accept the first suggestion?</p></div>
+      </div>
+    </section>
+
+    <section class="sec" id="open">
+      <h2>Open decisions</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Decision</th><th>Where it stands</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Not enough balance on the 5th</td><td>Design hypothesis: skip that month's deposit and notify. To confirm with the bank.</td></tr>
+          <tr><td class="k">Starting before February</td><td>Not offered: today's surplus equals the buffer Alex wants to keep.</td></tr>
+          <tr><td class="k">How to ask for the buffer</td><td>Some people can't name a number. Offer today's €90 as the starting point instead of a blank field.</td></tr>
+          <tr><td class="k">Pause and resume</td><td>The paused state of the pot is specified but not yet designed.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="sec" id="iterate">
+      <h2>What I'd do next</h2>
+      <ol class="num">
+        <li><b>Critique with the team.</b> Walk the flow with design, product and engineering to find refinement opportunities before testing.</li>
+        <li><b>Review the wording.</b> The copy can still be more objective. People skim, so every message should say less and get to the number faster.</li>
+        <li><b>Clean up the design library.</b> Many elements created along the way were never used, and that gets in the way of scaling. Remove them and polish what stays.</li>
+        <li><b>Connect the library to code.</b> With a lean library, extend Code Connect beyond Pot detail so every component maps to production.</li>
+      </ol>
+    </section>
+    <nav class="pager" data-pager></nav>
+  </div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="page" id="summary" data-title="Summary">
+  <div class="wide">
+    <header class="page-head" style="max-width:820px">
+      <span class="tag">11 · Summary</span>
+      <h1>The case on one page</h1>
+      <p class="lead">An assistant inside the bank that turns <b>“I don't know how much I can afford”</b> into a scheduled plan Alex understands, adjusts and approves.</p>
+    </header>
+    <section class="sec" id="sum-journey" style="margin-top:0">
+      <h2>User journey</h2>
+      <div class="sum-journey" id="sumJourney"></div>
+    </section>
+    <section class="sec" id="sum-rationale">
+      <h2>Design rationale</h2>
+      <div class="grid g2">
+        <div class="card stack"><span class="eyebrow">Answer the real question</span><p>Not “how much do I need” but “how much can I afford”, using the bank's own transactions, with the calculation one tap away.</p></div>
+        <div class="card stack"><span class="eyebrow">Answers that are interface</span><p>Sheets, cards and a slider inside the conversation. Typing “€370?” moves the same control, so context is never lost.</p></div>
+        <div class="card stack"><span class="eyebrow">The person decides</span><p>The AI suggests; Alex sets the buffer. Warnings inform without blocking, and approval is always explicit.</p></div>
+        <div class="card stack"><span class="eyebrow">Trust before money moves</span><p>“Nothing leaves your account today”, the first date, how to pause, and a check-in in January.</p></div>
+      </div>
+    </section>
+    <section class="sec" id="sum-tools">
+      <h2>AI tools used</h2>
+      <p class="muted"><b style="color:var(--fg)">Claude Code</b> (Sonnet, Opus, Fable) for brief, journey, solution framework, content, Figma screens via MCP, prototype and handoff code · <b style="color:var(--fg)">Figma MCP + Astryx</b> for execution in the file · <b style="color:var(--fg)">Codex</b> for the 3D images · <b style="color:var(--fg)">ChatGPT</b> for the first budget draft, later rejected. Judgement criteria: fit to the brief, numerical honesty, trust and control, continuity, system fidelity, evidence over taste.</p>
+    </section>
+    <section class="sec" id="sum-links">
+      <h2>Links</h2>
+      <div class="links">
+        <a href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=2-14306" target="_blank" rel="noopener">Figma · Design &amp; flow <span>figma.com ↗</span></a>
+        <a href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=0-1" target="_blank" rel="noopener">Figma · Design Library <span>figma.com ↗</span></a>
+        <a href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=162-4192" target="_blank" rel="noopener">Figma · AI process <span>figma.com ↗</span></a>
+        <a href="https://www.figma.com/design/nKL5vR1jB5EFNP3bVpJhJI/Camille-s-Challenge?node-id=278-53265" target="_blank" rel="noopener">Figma · Handoff <span>figma.com ↗</span></a>
+        <a href="https://github.com/cacmpss/pot-detail-handoff" target="_blank" rel="noopener">GitHub · Pot detail in React, tokens and Code Connect <span>github.com ↗</span></a>
+        <a href="#prototype" data-go="prototype">Interactive prototype <span>page 05</span></a>
+        <a href="https://github.com/cacmpss/wit-prototipo/tree/prototipo-interativo/prototipo" target="_blank" rel="noopener">GitHub · Interactive prototype (HTML, CSS, JS) <span>github.com ↗</span></a>
+      </div>
+    </section>
+    <nav class="pager" style="max-width:820px" data-pager></nav>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search pages and sections"><div class="pal-box"><input id="palInput" type="text" placeholder="Search pages and sections" autocomplete="off" aria-label="Search pages and sections"><ul class="pal-list" id="palList"></ul></div></div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged image"><div><img id="lbImg" alt=""><p class="cap" id="lbCap"></p></div></div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PAGES = ['cover','context','alex','journey','solutions','prototype','flow','system','ai','handoff','next','summary'];
+  const TITLES = {};
+  PAGES.forEach(id => { TITLES[id] = $('#' + id).dataset.title; });
+
+  /* ---------- Pager ---------- */
+  $$('[data-pager]').forEach(nav => {
+    const id = nav.closest('.page').id, i = PAGES.indexOf(id);
+    const prev = PAGES[i - 1], next = PAGES[i + 1];
+    nav.innerHTML =
+      (prev ? `<a class="prev" href="#${prev}"><span class="eyebrow">← Previous</span><span class="t">${TITLES[prev]}</span></a>` : '<span></span>') +
+      (next ? `<a class="next" href="#${next}"><span class="eyebrow">Next →</span><span class="t">${TITLES[next]}</span></a>` : '<span></span>');
+  });
+  /* ---------- Shell: tree rail, menus, resizer ---------- */
+  const NAV_GROUPS = [
+    { name: 'Story', pages: ['context', 'alex', 'journey'] },
+    { name: 'Solution', pages: ['solutions', 'prototype', 'flow'] },
+    { name: 'Craft', pages: ['system', 'ai', 'handoff'] },
+    { name: 'Close', pages: ['next', 'summary'] },
+  ];
+  const num = id => String(PAGES.indexOf(id)).padStart(2, '0');
+  const ICON = {
+    chev: '<svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+    folder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>',
+    file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/></svg>',
+  };
+  const sectionsOf = id => $$('.sec', $('#' + id))
+    .map(s => ({ s, h: s.querySelector(':scope > h2') }))
+    .filter(x => x.s.id && x.h && !x.h.classList.contains('sr'))
+    .map(x => ({ id: x.s.id, t: x.h.textContent }));
+  $('#tree').innerHTML =
+    `<li><a class="node" href="#cover" data-page="cover">${ICON.file}<span>Cover</span></a></li>` +
+    NAV_GROUPS.map(g => `<li class="group" data-group="${g.name}">
+      <button class="node" type="button" aria-expanded="true">${ICON.chev}${ICON.folder}<span>${g.name}</span></button>
+      <ul>${g.pages.map(p => `<li><a class="node" href="#${p}" data-page="${p}"><span class="n">${num(p)}</span><span>${TITLES[p]}</span></a><ul class="secs" data-secs="${p}" hidden></ul></li>`).join('')}</ul>
+    </li>`).join('');
+  $$('.group > .node').forEach(b => b.addEventListener('click', () => {
+    const g = b.parentElement; g.classList.toggle('closed');
+    b.setAttribute('aria-expanded', String(!g.classList.contains('closed')));
+  }));
+  function closeMenus() { $$('.menu').forEach(m => { m.classList.remove('open'); $('button', m).setAttribute('aria-expanded', 'false'); }); }
+  $$('.menu').forEach(m => {
+    const g = NAV_GROUPS.find(x => x.name === m.dataset.group);
+    $('.menu-pop', m).innerHTML = g.pages.map(p => `<a href="#${p}" data-page="${p}" role="menuitem"><span class="n">${num(p)}</span>${TITLES[p]}</a>`).join('');
+    const btn = $('button', m);
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = !m.classList.contains('open');
+      closeMenus(); m.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+  const app = $('#app');
+  function setRail(open) { app.classList.toggle('rail-open', open); $('#railToggle').setAttribute('aria-expanded', String(open)); }
+  $('#railToggle').addEventListener('click', e => { e.stopPropagation(); setRail(!app.classList.contains('rail-open')); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.menu')) closeMenus();
+    if (app.classList.contains('rail-open') && !e.target.closest('#rail, #railToggle')) setRail(false);
+  });
+  try { const w = +localStorage.getItem('railw'); if (w >= 200 && w <= 380) app.style.setProperty('--railw', w + 'px'); } catch (e) {}
+  const rz = $('#resizer');
+  rz.addEventListener('pointerdown', e => {
+    e.preventDefault(); rz.setPointerCapture(e.pointerId); rz.classList.add('drag');
+    const left = app.getBoundingClientRect().left;
+    let w = 224;
+    const move = ev => { w = Math.round(Math.min(380, Math.max(200, ev.clientX - left))); app.style.setProperty('--railw', w + 'px'); };
+    const up = () => {
+      rz.classList.remove('drag'); rz.removeEventListener('pointermove', move); rz.removeEventListener('pointerup', up);
+      try { localStorage.setItem('railw', String(w)); } catch (e) {}
+    };
+    rz.addEventListener('pointermove', move); rz.addEventListener('pointerup', up);
+  });
+
+  /* ---------- Router ---------- */
+  const content = $('#content');
+  let current = null, secObs = null;
+  function buildSecs(id) {
+    $$('.secs').forEach(u => { u.hidden = true; u.innerHTML = ''; });
+    if (secObs) secObs.disconnect();
+    const ul = $(`.secs[data-secs="${id}"]`);
+    const secs = ul ? sectionsOf(id) : [];
+    if (!secs.length) return;
+    ul.innerHTML = secs.map(s => `<li><a href="#${id}" data-sec="${s.id}">${s.t}</a></li>`).join('');
+    ul.hidden = false;
+    const links = $$('a', ul);
+    links.forEach(a => a.addEventListener('click', e => {
+      e.preventDefault(); setRail(false);
+      document.getElementById(a.dataset.sec).scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+    }));
+    secObs = new IntersectionObserver(entries => entries.forEach(en => {
+      if (en.isIntersecting) links.forEach(a => a.classList.toggle('on', a.dataset.sec === en.target.id));
+    }), { root: content, rootMargin: '-10% 0px -75% 0px' });
+    secs.forEach(s => secObs.observe(document.getElementById(s.id)));
+    links[0].classList.add('on');
+  }
+  function show(id, opts = {}) {
+    if (!PAGES.includes(id)) id = 'cover';
+    if (id === current) return;
+    const swap = () => {
+      $$('.page').forEach(p => p.classList.remove('on', 'fade', 'leave'));
+      const page = $('#' + id);
+      page.classList.add('on');
+      if (!opts.instant) page.classList.add('fade');
+      content.scrollTo(0, 0);
+      $$('.node[data-page], .menu-pop a').forEach(a => a.classList.toggle('active', a.dataset.page === id));
+      const grp = $(`.node[data-page="${id}"]`)?.closest('.group');
+      if (grp) { grp.classList.remove('closed'); $('.node', grp).setAttribute('aria-expanded', 'true'); }
+      document.title = id === 'cover' ? "Alex's Holiday Plan" : TITLES[id] + " · Alex's Holiday Plan";
+      buildSecs(id);
+      if (id === 'prototype') { const f = $('#protoFrame'); if (!f.src) f.src = f.dataset.src; }
+      if (id === 'journey') requestAnimationFrame(() => { jTarget = jPos = 0; applyJ(); });
+      if (id === 'cover') playDemo();
+      current = id;
+      setRail(false); closeMenus();
+    };
+    const prev = current && $('#' + current);
+    clearTimeout(show._t);
+    if (prev && !opts.instant && !RM) {
+      prev.classList.remove('fade'); prev.classList.add('leave');
+      show._t = setTimeout(swap, 170);
+    } else swap();
+  }
+  const fromHash = () => (location.hash || '#cover').slice(1);
+  window.addEventListener('hashchange', () => {
+    const id = fromHash();
+    show(id, { dark: current === 'cover' || id === 'cover' });
+  });
+
+  /* ---------- Command palette ---------- */
+  const INDEX = [];
+  PAGES.forEach(p => {
+    INDEX.push({ t: TITLES[p], p, sec: null, sub: p === 'cover' ? 'Cover' : 'Page ' + num(p) });
+    if (p !== 'cover') sectionsOf(p).forEach(s => INDEX.push({ t: s.t, p, sec: s.id, sub: TITLES[p] }));
+  });
+  const pal = $('#palette'), palIn = $('#palInput'), palList = $('#palList');
+  let palSel = 0, palItems = [];
+  function renderPal() {
+    const q = palIn.value.trim().toLowerCase();
+    palItems = INDEX.filter(x => !q || (x.t + ' ' + x.sub).toLowerCase().includes(q)).slice(0, 40);
+    palSel = Math.min(palSel, Math.max(0, palItems.length - 1));
+    palList.innerHTML = palItems.length
+      ? palItems.map((x, i) => `<li><a href="#${x.p}" data-i="${i}" class="${i === palSel ? 'sel' : ''}">${x.t}<span>${x.sub}</span></a></li>`).join('')
+      : '<li class="pal-empty">No page or section matches.</li>';
+    palList.querySelector('.sel')?.scrollIntoView({ block: 'nearest' });
+  }
+  function openPal() { closeMenus(); pal.classList.add('on'); palIn.value = ''; palSel = 0; renderPal(); palIn.focus(); }
+  function closePal() { pal.classList.remove('on'); $('#searchBtn').focus(); }
+  function goPal(i) {
+    const x = palItems[i]; if (!x) return;
+    pal.classList.remove('on');
+    const same = x.p === current;
+    if (!same) location.hash = x.p;
+    if (x.sec) setTimeout(() => document.getElementById(x.sec)?.scrollIntoView({ block: 'start' }), same ? 0 : 280);
+  }
+  palIn.addEventListener('input', () => { palSel = 0; renderPal(); });
+  palIn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palSel + 1, palItems.length - 1); renderPal(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(palSel - 1, 0); renderPal(); }
+    else if (e.key === 'Enter') { e.preventDefault(); goPal(palSel); }
+    else if (e.key === 'Escape') { e.preventDefault(); closePal(); }
+  });
+  palList.addEventListener('click', e => { const a = e.target.closest('a'); if (a) { e.preventDefault(); goPal(+a.dataset.i); } });
+  pal.addEventListener('click', e => { if (e.target === pal) closePal(); });
+  $('#searchBtn').addEventListener('click', openPal);
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); pal.classList.contains('on') ? closePal() : openPal(); return; }
+    if (e.key === 'Escape') { closeMenus(); setRail(false); }
+    if (pal.classList.contains('on')) return;
+    if (e.target.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if ($('#lightbox').classList.contains('on')) { if (e.key === 'Escape') closeLb(); return; }
+    const i = PAGES.indexOf(current);
+    if (current === 'cover' && e.key === 'Enter' && !e.target.closest('a, button')) { location.hash = 'context'; return; }
+    if (e.key === 'ArrowRight' && i < PAGES.length - 1) location.hash = PAGES[i + 1];
+    if (e.key === 'ArrowLeft' && i > 0) location.hash = PAGES[i - 1];
+  });
+
+  /* ---------- Cover demo ---------- */
+  const REQ = "I want to save €3,000 for a holiday next summer, but I don't know how much I can afford to save every month.";
+  let demoRun = 0;
+  function demoFinal(body) {
+    body.innerHTML = `<div class="msg me">${REQ}</div>
+      <div class="msg ai"><span class="lbl">Assistant</span>Got it, a €3,000 holiday next summer. I've filled in what I understood. Is it right?</div>
+      <div class="sum"><div class="row">Goal<b>€3,000 · end of Aug 2027</b></div><div class="row">Already put aside<b>€300</b></div><div class="bar"><i style="width:10%"></i></div><div class="row">Left to save<b>€2,700</b></div></div>
+      <div class="chips"><span class="p">Yes, calculate my plan</span><span>Correct something</span></div>`;
+    $('#demoTxt').textContent = '';
+  }
+  async function playDemo() {
+    const run = ++demoRun, body = $('#demoBody'), txt = $('#demoTxt');
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const alive = () => run === demoRun && current === 'cover';
+    if (RM) { demoFinal(body); return; }
+    body.innerHTML = ''; txt.textContent = '';
+    await wait(500);
+    for (let i = 1; i <= REQ.length; i++) { if (!alive() && current) return; txt.textContent = REQ.slice(0, i); await wait(REQ[i - 1] === ' ' ? 34 : 22); }
+    await wait(350); if (run !== demoRun) return;
+    txt.textContent = '';
+    body.insertAdjacentHTML('beforeend', `<div class="msg me">${REQ}</div>`);
+    await wait(400); if (run !== demoRun) return;
+    body.insertAdjacentHTML('beforeend', `<div class="msg ai dots" id="dTyping"><i></i><i></i><i></i></div>`);
+    await wait(1100); if (run !== demoRun) return;
+    $('#dTyping')?.remove();
+    body.insertAdjacentHTML('beforeend', `<div class="msg ai"><span class="lbl">Assistant</span>Got it, a €3,000 holiday next summer. I've filled in what I understood. Is it right?</div>`);
+    await wait(380); if (run !== demoRun) return;
+    body.insertAdjacentHTML('beforeend', `<div class="sum"><div class="row">Goal<b>€3,000 · end of Aug 2027</b></div><div class="row">Already put aside<b>€300</b></div><div class="bar"><i></i></div><div class="row">Left to save<b>€2,700</b></div></div>`);
+    await wait(250); const bar = body.querySelector('.sum .bar i'); if (bar) bar.style.width = '10%';
+    await wait(420); if (run !== demoRun) return;
+    body.insertAdjacentHTML('beforeend', `<div class="chips"><span class="p">Yes, calculate my plan</span><span>Correct something</span></div>`);
+  }
+  $('#replay').addEventListener('click', () => { demoRun++; playDemo(); });
+
+  /* ---------- Journey ---------- */
+  const STAGES = [
+    { n: '01', name: 'Express the goal', req: 'Express intent naturally', img: 'goal-sheet',
+      q: 'Did the AI understand what I want?',
+      action: 'Describes the trip to the AI and confirms the date and the amount already saved.',
+      objective: 'Be understood without needing to know which function to open.',
+      pain: 'Explicit pain: does not know how much can be saved per month. In the traditional app, would still need to know which function to open.',
+      risk: 'The AI misinterprets the goal or the date and proceeds without confirming with the person.',
+      mode: 'Conversation: request in free text and a correctable summary.',
+      opp: 'The AI returns the goal (€3,000), the trip date (end of August) and the amount already saved (€300) in a correctable summary.' },
+    { n: '02', name: 'Understand what fits the budget', req: 'Understand through simple visuals', img: 'surplus-suggested',
+      q: 'How much would I need to save? Does this fit in my month?',
+      action: 'Checks the necessary amount (€386) against the estimated surplus (about €445 from February) and corrects expenses.',
+      objective: 'Know how much can be saved without tightening the month.',
+      pain: 'Hypothesis: it is hard to estimate what is left after expenses that vary, and to see which data led to the recommended amount.',
+      risk: 'Presenting the February surplus (about €445) as certain, without showing it depends on two instalments ending in January.',
+      mode: 'Visual inside the conversation: one bar comparing expenses and estimated surplus, today and from February. Details on demand.',
+      opp: 'Shows the necessary amount (€386), the estimated surplus (about €445 from February) and what would be left free (about €59), with the calculation available.' },
+    { n: '03', name: 'Experiment and decide', req: 'Explore and adjust the recommendation', img: 'interactive-plan-adjust', main: true,
+      q: '“€59 free is too tight. How close do I get if I keep €90 free?”',
+      action: 'Sets a minimum to keep free (€90), compares €350 with €386, sees the total by the trip and what is left free, and chooses.',
+      objective: 'Choose a monthly amount that balances reaching €3,000 with keeping a minimum free each month.',
+      pain: 'Hypothesis: €386 leaves too little free, and the person does not know how much would be missing if they saved less.',
+      risk: 'Losing the goal, the date or the minimum free when moving between conversation and controls, or hiding how much is left for the goal.',
+      mode: 'Direct control: a slider with a live projection. Typing “What if it were €370?” moves the same control.',
+      opp: 'Amount control with live total, difference to the goal and amount left free. Warns, without blocking, below the chosen €90. Goal and date stay visible.' },
+    { n: '04', name: 'Review and authorise', req: 'Review and approve explicitly', img: 'review',
+      q: '“What am I authorising? Can I change it later?”',
+      action: 'Reviews the data and authorises the plan.',
+      objective: 'Check the plan before authorising, with the option to go back a step.',
+      pain: 'Hypothesis: “If I need to save less in a month, how will I do that?”',
+      risk: 'Authorising without clarity on what happens today (nothing leaves until 5 February), or without knowing it can be changed later.',
+      mode: 'A familiar review screen: a list of data and an explicit authorise button.',
+      opp: 'Shows 7 deposits of €350 from 5 February, source, destination and €2,750 expected (€250 short). States that nothing leaves today and that it can be changed or paused.' },
+    { n: '05', name: 'Confirm and next steps', req: 'Keep context between chat and controls', img: 'plan-scheduled',
+      q: '“When is the first deposit due?”',
+      action: 'Reads the confirmation and the date of the first deposit.',
+      objective: 'Know that the plan is scheduled and when it starts.',
+      pain: 'Hypothesis: if I need to withdraw the saved money, how does it change the projection of the goal?',
+      risk: 'Finishing without knowing when the first deposit is due (5 February) or where to change, withdraw or pause.',
+      mode: 'Visual confirmation, AI support, and actionable options to change, withdraw, pause and cancel.',
+      opp: 'Confirms the schedule and the first date (5 February 2027), with a re-check in January and access to change, pause and see progress.' },
+  ];
+  const track = $('#jTrack');
+  track.innerHTML = STAGES.map((s, i) => `
+    <div class="jstep">
+      <button type="button" class="jcard${s.main ? ' main' : ''}" data-i="${i}" aria-label="Step ${s.n}: ${s.name}">
+        <span class="stage"><span>Step ${s.n}</span>${s.main ? '<em>Main decision</em>' : ''}</span>
+        <span class="shot"><img src="assets/mockups/${s.img}.png" alt="" loading="lazy"></span>
+        <h3>${s.name}</h3>
+        <span class="q">${s.q.replace(/^“|”$/g, '')}</span>
+        <span class="rq">✓ ${s.req}</span>
+      </button>
+    </div>${i < STAGES.length - 1 ? '<span class="conn" aria-hidden="true"></span>' : ''}`).join('');
+  const detail = $('#jDetail');
+  let jStage = -1;
+  function setStage(i) {
+    if (i === jStage) return;
+    jStage = i;
+    const s = STAGES[i];
+    $$('.jcard').forEach(c => c.classList.toggle('on', +c.dataset.i === i));
+    detail.classList.add('swap');
+    setTimeout(() => {
+      $('#jStageLbl').textContent = `Step ${s.n}${s.main ? ' · main decision' : ''}`;
+      $('#jStageTitle').textContent = s.name;
+      detail.innerHTML = `
+        <div class="card doubt"><h4>Alex's doubt</h4><p>${s.q}</p></div>
+        <div class="card"><h4>What Alex does</h4><p>${s.action}</p></div>
+        <div class="card"><h4>Objective</h4><p>${s.objective}</p></div>
+        <div class="card"><h4>Pain</h4><p>${s.pain}</p></div>
+        <div class="card risk"><h4>Risk to avoid</h4><p>${s.risk}</p></div>
+        <div class="card opp"><h4>Opportunity · how the design answers</h4><p>${s.opp}</p><p class="small muted" style="margin-top:8px">${s.mode}</p></div>`;
+      detail.classList.remove('swap');
+    }, RM ? 0 : 120);
+  }
+  $$('.jcard').forEach(c => {
+    c.addEventListener('mouseenter', () => setStage(+c.dataset.i));
+    c.addEventListener('focus', () => setStage(+c.dataset.i));
+    c.addEventListener('click', () => setStage(+c.dataset.i));
+  });
+  setStage(2);
+  const wrap = $('#jWrap');
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let jTarget = 0, jPos = 0, raf = 0;
+  function applyJ() { track.style.transform = `translate3d(${-jPos}px,0,0)`; }
+  function loop() {
+    jPos += (jTarget - jPos) * 0.09;
+    if (Math.abs(jTarget - jPos) < 0.3) { jPos = jTarget; applyJ(); raf = 0; return; }
+    applyJ(); raf = requestAnimationFrame(loop);
+  }
+  if (fine) {
+    wrap.addEventListener('mousemove', e => {
+      const r = wrap.getBoundingClientRect();
+      const max = Math.max(0, track.scrollWidth - r.width);
+      const x = Math.min(1, Math.max(0, (e.clientX - r.left - r.width * 0.1) / (r.width * 0.8)));
+      jTarget = max * x;
+      if (RM) { jPos = jTarget; applyJ(); } else if (!raf) raf = requestAnimationFrame(loop);
+    });
+  }
+
+  /* ---------- Gallery ---------- */
+  const GROUPS = [
+    { t: 'Entry', d: 'From the account to the assistant', items: [
+      ['home-account', 'Home · account', 'The assistant button sits where the person already is.'],
+      ['home-search', 'Home · search', 'Search stays fixed for help, QR and other options.'],
+      ['opening', 'Assistant opens', 'Starter actions for when the person doesn\'t know what to ask.'],
+      ['opening-keyboard', 'Typing the request', 'Free text, in the person\'s own words.'],
+      ['request-sent', 'Request sent', 'Immediate feedback before the answer.'] ] },
+    { t: 'Step 1 · Express the goal', d: 'A sentence becomes a correctable summary', items: [
+      ['goal-sheet', 'Goal · sheet', 'What the AI understood, editable before it moves on.'],
+      ['goal-sheet-closed', 'Goal · sheet closed', 'Closing the sheet keeps the questions one tap away.'] ] },
+    { t: 'Step 2 · Understand the budget', d: 'Consent, then the numbers', items: [
+      ['data-permission', 'Data permission', 'What is read, for how long, and a way to type it instead.'],
+      ['permission-closed', 'Permission · closed', 'The request stays visible in the chat.'],
+      ['thinking', 'Thinking', 'The AI shows the steps it is taking.'],
+      ['monthly-surplus', 'Monthly surplus', 'A month slider shows today versus February.'],
+      ['surplus-suggested', 'Suggested plan', 'The suggestion arrives with Accept and Modify.'] ] },
+    { t: 'Step 3 · Experiment and decide', d: 'The main decision', items: [
+      ['interactive-plan', 'Interactive plan', 'Shortcuts, stepper and slider move one projection.'],
+      ['interactive-plan-adjust', 'Plan · adjusted', '€350 keeps today\'s buffer: €95 a month left over.'] ] },
+    { t: 'Step 4 · Review and authorise', d: 'Before any money moves', items: [
+      ['preparing-review', 'Preparing the review', 'The AI double-checks the numbers it will show.'],
+      ['review', 'Review and confirm', 'Nothing is deducted until Alex confirms with Face ID.'],
+      ['review-scrolled', 'Review · scrolled', 'Source, deposits and the August total in one list.'] ] },
+    { t: 'Step 5 · Confirm and after', d: 'The plan lives where Alex already looks', items: [
+      ['plan-scheduled', 'Plan scheduled', 'First deposit on 5 February, a check-in in January.'],
+      ['pot-detail', 'Pot detail', 'Balance, progress and a way to close the €250 gap.'],
+      ['pot-detail-scrolled', 'Pot detail · scrolled', 'How it is scheduled, change day, pause.'],
+      ['pots-list', 'Pots', 'The new pot next to the existing ones.'],
+      ['home-with-plan', 'Home with the plan', 'Back home, the pot shows as scheduled.'] ] },
+  ];
+  $('#gallery').innerHTML = GROUPS.map((g, gi) => `
+    <section class="sec" id="g-${gi}"${gi === 0 ? ' style="margin-top:0"' : ''}>
+      <h2 style="font-size:19px">${g.t}</h2>
+      <p class="sub">${g.d}</p>
+      <div class="strip">${g.items.map(([f, t, d]) => `
+        <figure class="shot-card" style="margin:0"><button type="button" data-zoom="assets/mockups/${f}.png" data-cap="${t}"><img src="assets/mockups/${f}.png" alt="${t}" loading="lazy"></button>
+        <figcaption><div class="t">${t}</div><div class="d">${d}</div></figcaption></figure>`).join('')}</div>
+    </section>`).join('');
+
+  /* ---------- Motion tokens ---------- */
+  const MT = [
+    ['instant', 100, 'cubic-bezier(0.2,0,0,1)', 'Pressed states, toggles'],
+    ['fast', 150, 'cubic-bezier(0.2,0,0,1)', 'Chips, small fades'],
+    ['base', 250, 'cubic-bezier(0.05,0.7,0.1,1)', 'Messages entering the chat'],
+    ['slow', 350, 'linear(0, 0.2 4%, 0.55 10%, 0.8 16%, 0.94 22%, 1.01 29%, 1.02 35%, 1.008 47%, 1)', 'Sheets, with the spring curve'],
+    ['data', 600, 'cubic-bezier(0.2,0,0,1)', 'Charts and totals changing together'],
+  ];
+  $('#motionTokens').innerHTML = MT.map(([n, ms, e, use]) => `
+    <div class="row" tabindex="0"><span class="nm">--d-${n}</span><span class="ms">${ms} ms</span><span class="lane"><i style="transition-duration:${ms}ms;transition-timing-function:${e}"></i></span><span class="use">${use}</span></div>`).join('');
+  $$('#motionTokens .row').forEach(r => { r.addEventListener('focus', () => r.classList.add('play')); r.addEventListener('blur', () => r.classList.remove('play')); });
+
+  /* ---------- Swatches ---------- */
+  const SW = [
+    ['Inverted', '#163300', 'Core/Background Inverted'], ['Accent', '#9fe870', 'Core/Accent'], ['Accent muted', '#e2f6d5', 'Core/Accent Muted'],
+    ['Text primary', '#171717', 'Text/Primary'], ['Text secondary', '#737373', 'Text/Secondary'], ['Surface', '#ffffff', 'Surface/Card'],
+    ['Body', '#f1f1f1', 'Surface/Body'], ['Success', '#007004', 'Status/Success'], ['Error', '#a50c25', 'Status/Error'],
+    ['Info', '#0074e2', 'Status/Info'], ['Chart · fixed', '#a0e1e1', 'Chart/Fixed'], ['Chart · card', '#ffc091', 'Chart/Card'],
+  ];
+  $('#swatches').innerHTML = SW.map(([n, h, v]) => `<div class="sw"><i style="background:${h}"></i><div><b>${n}</b><span>${h}</span><span>${v}</span></div></div>`).join('');
+
+  /* ---------- Summary journey ---------- */
+  $('#sumJourney').innerHTML = STAGES.map(s => `<div><img src="assets/mockups/${s.img}.png" alt="${s.name}" loading="lazy"><b>${s.n} · ${s.name}</b><span>${s.req}</span></div>`).join('');
+
+  /* ---------- Components in motion (framed showcase) ---------- */
+  (() => {
+    const fr = $('#showcaseFrame'); if (!fr) return;
+    addEventListener('message', e => {
+      if (e.source === fr.contentWindow && e.data && e.data.showcaseHeight) fr.style.height = Math.ceil(e.data.showcaseHeight) + 'px';
+    });
+    let vis = false;
+    const tell = () => { try { fr.contentWindow.postMessage({ showcaseRun: vis }, '*'); } catch (err) {} };
+    new IntersectionObserver(([en]) => { vis = en.isIntersecting; tell(); }, { root: $('#content'), threshold: 0.05 }).observe(fr);
+    fr.addEventListener('load', tell);
+    // Same-origin fallback: when the frame's width changes, read the showcase height directly.
+    const measure = () => { try { const b = fr.contentDocument.getElementById('bento'); if (b) fr.style.height = Math.ceil(b.getBoundingClientRect().height) + 'px'; } catch (err) {} };
+    new ResizeObserver(() => { requestAnimationFrame(measure); setTimeout(measure, 200); setTimeout(measure, 600); }).observe(fr);
+    setInterval(() => { if (fr.offsetParent) measure(); }, 800);
+    fr.addEventListener('load', measure);
+  })();
+
+  /* ---------- Lightbox ---------- */
+  const lb = $('#lightbox');
+  function closeLb() { lb.classList.remove('on'); }
+  document.addEventListener('click', e => {
+    const z = e.target.closest('[data-zoom]');
+    if (z) { $('#lbImg').src = z.dataset.zoom; $('#lbImg').alt = z.dataset.cap || ''; $('#lbCap').textContent = z.dataset.cap || ''; lb.classList.add('on'); return; }
+    if (e.target.closest('#lightbox')) closeLb();
+  });
+
+  show(fromHash(), { instant: true });
+})();
+</script>
