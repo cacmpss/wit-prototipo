@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Summer Holiday Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <aside class="presenter" aria-label="Prototype controls">
+    <div>
+      <h1>Summer holiday · AI savings plan</h1>
+      <p>Clickable prototype. Tap through the phone, or jump to a step.</p>
+    </div>
+    <ol id="stepList"></ol>
+    <div class="row">
+      <button class="pbtn" id="restartBtn" type="button">Restart</button>
+      <label class="toggle" for="rmToggle"><input type="checkbox" id="rmToggle" /> Reduce motion</label>
+    </div>
+    <p class="keys">Keys: <kbd>←</kbd> <kbd>→</kbd> step · <kbd>1</kbd>–<kbd>0</kbd> jump · <kbd>R</kbd> restart</p>
+  </aside>
+
+  <div class="stage">
+    <div class="device" id="device">
+      <div class="screen" id="screen">
+        <div class="statusbar" id="statusbar">
+          <span>9:41</span>
+          <span class="indicators">
+            <svg class="icon" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg class="icon" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><path d="M8 2.3c2.2 0 4.2.85 5.7 2.25l1.1-1.15A9.8 9.8 0 0 0 8 .7 9.8 9.8 0 0 0 1.2 3.4l1.1 1.15A8.2 8.2 0 0 1 8 2.3Zm0 3.2c1.4 0 2.6.5 3.6 1.35l1.1-1.15A6.8 6.8 0 0 0 8 3.9a6.8 6.8 0 0 0-4.7 1.8l1.1 1.15A5.2 5.2 0 0 1 8 5.5Zm0 3.2c.6 0 1.1.2 1.5.55L8 11 6.5 9.25c.4-.35.9-.55 1.5-.55Z"/></svg>
+            <svg viewBox="0 0 27 13" width="25" height="12" aria-hidden="true"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="currentColor" opacity="0.4"/><rect x="2" y="2" width="19" height="9" rx="2" fill="currentColor"/><path d="M24 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="currentColor" opacity="0.4"/></svg>
+          </span>
+        </div>
+        <div class="island" aria-hidden="true"></div>
+        <div class="home-indicator" aria-hidden="true"></div>
+
+        <section class="view home" id="viewHome" aria-label="Account"></section>
+        <section class="view chat" id="viewChat" aria-label="Assistant" hidden></section>
+        <section class="view pot" id="viewPot" aria-label="Pot detail" hidden></section>
+      </div>
+    </div>
+  </div>
+
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
